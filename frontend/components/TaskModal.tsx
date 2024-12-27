@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
-import { X, Calendar, Tag, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users } from 'lucide-react';
+import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
-import { updateTaskStatusAndLog } from '@/store/slices/kanban';
+import { updateTaskStatusAndLog, updateTaskChecklistAndLog } from '@/store/slices/kanban';
 import { User } from '@/store/slices/userSlice';
+import { Tag } from '@/store/slices/tagSlice';
 
 interface TaskModalProps {
     taskId: string;
@@ -16,6 +17,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const projects = useSelector((state: RootState) => state.projects.projects);
     const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
     const users = useSelector((state: RootState) => state.users.users);
+    const tags = useSelector((state: RootState) => state.tags.tags);
 
     const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     const task = milestone?.tasks.find(t => t.id === taskId);
@@ -28,21 +30,28 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     if (!task || !localTask) return null;
 
     const handleInputChange = (field: string, value: any) => {
-        setLocalTask({ ...localTask, [field]: value });
-        if (field === 'status' && milestone) {
-            dispatch(updateTaskStatusAndLog(task.id, value));
+        if (field !== 'startDate' && field !== 'dueDate' && field !== 'deadline') {
+            setLocalTask({ ...localTask, [field]: value });
+            if (field === 'status' && milestone) {
+                dispatch(updateTaskStatusAndLog(task.id, value));
+            }
         }
     };
 
-    const handleDateChange = (field: 'startDate' | 'dueDate' | 'deadline', value: string) => {
-        const date = new Date(value);
-        const isoString = date.toISOString();
-        setLocalTask({ ...localTask, [field]: isoString });
-    };
 
     const handleSave = () => {
         if (milestone) {
-            dispatch(updateTask({ milestoneId: milestone.id, taskId: task.id, updates: localTask }));
+            const updatedChecklist = localTask.checklist.filter(
+                (item, index) => item.isCompleted !== task.checklist[index].isCompleted
+            );
+            dispatch(updateTask({
+                milestoneId: milestone.id,
+                taskId: task.id,
+                updates: localTask
+            }));
+            if (updatedChecklist.length > 0) {
+                dispatch(updateTaskChecklistAndLog(task.id, localTask.checklist));
+            }
         }
         onClose();
     };
@@ -89,9 +98,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <h3 className="text-2xl font-bold text-gray-900">{localTask.title}</h3>
+            <div className="relative w-full max-w-4xl bg-base-100 rounded-xl shadow-lg overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-2xl font-bold">{localTask.title}</h3>
                     <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
                         <X size={20} />
                     </button>
@@ -149,57 +158,56 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     <label className="label">
                                         <span className="label-text font-semibold">Start Date</span>
                                     </label>
-                                    <input
-                                        type="datetime-local"
-                                        className="input input-bordered w-full"
-                                        value={new Date(localTask.startDate).toISOString().slice(0, 16)}
-                                        onChange={(e) => handleDateChange('startDate', e.target.value)}
-                                    />
+                                    <p className="text-sm">{new Date(localTask.startDate).toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <label className="label">
                                         <span className="label-text font-semibold">Due Date</span>
                                     </label>
-                                    <input
-                                        type="datetime-local"
-                                        className="input input-bordered w-full"
-                                        value={new Date(localTask.dueDate).toISOString().slice(0, 16)}
-                                        onChange={(e) => handleDateChange('dueDate', e.target.value)}
-                                    />
+                                    <p className="text-sm">{new Date(localTask.dueDate).toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <label className="label">
                                         <span className="label-text font-semibold">Deadline</span>
                                     </label>
-                                    <input
-                                        type="datetime-local"
-                                        className="input input-bordered w-full"
-                                        value={new Date(localTask.deadline).toISOString().slice(0, 16)}
-                                        onChange={(e) => handleDateChange('deadline', e.target.value)}
-                                    />
+                                    <p className="text-sm">{new Date(localTask.deadline).toLocaleString()}</p>
                                 </div>
                             </div>
                             <div>
                                 <label className="label">
-                                    <span className="label-text font-semibold">Labels</span>
+                                    <span className="label-text font-semibold">Tags</span>
                                 </label>
-                                <div className="flex flex-wrap gap-2">
-                                    {localTask.labels.map((label, index) => (
-                                        <div key={index} className="badge badge-primary">{label}</div>
-                                    ))}
-                                    <input
-                                        type="text"
-                                        className="input input-bordered input-sm"
-                                        placeholder="Add label"
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                const input = e.target as HTMLInputElement;
-                                                handleInputChange('labels', [...localTask.labels, input.value]);
-                                                input.value = '';
-                                            }
-                                        }}
-                                    />
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    {localTask.tags.map((tagId) => {
+                                        const tag = tags.find(t => t.id === tagId);
+                                        return tag ? (
+                                            <div key={tag.id} className={`badge ${tag.color} text-white`}>
+                                                {tag.name}
+                                                <button
+                                                    className="ml-1"
+                                                    onClick={() => handleInputChange('tags', localTask.tags.filter(id => id !== tag.id))}
+                                                >
+                                                    <RemoveIcon size={12} />
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
                                 </div>
+                                <select
+                                    className="select select-bordered w-full"
+                                    onChange={(e) => {
+                                        const selectedTagId = e.target.value;
+                                        if (selectedTagId && !localTask.tags.includes(selectedTagId)) {
+                                            handleInputChange('tags', [...localTask.tags, selectedTagId]);
+                                        }
+                                    }}
+                                    value=""
+                                >
+                                    <option value="" disabled>Add a tag</option>
+                                    {tags.filter(tag => !localTask.tags.includes(tag.id)).map(tag => (
+                                        <option key={tag.id} value={tag.id}>{tag.name}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="label">
@@ -234,18 +242,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     </li>
                                 ))}
                             </ul>
-                            <div className="flex items-center mt-2">
-                                <input
-                                    type="text"
-                                    className="input input-bordered flex-grow mr-2"
-                                    value={newChecklistItem}
-                                    onChange={(e) => setNewChecklistItem(e.target.value)}
-                                    placeholder="Add new checklist item"
-                                />
-                                <button className="btn btn-primary btn-square" onClick={addChecklistItem}>
-                                    <Plus size={20} />
-                                </button>
-                            </div>
                         </div>
                     )}
                     {activeTab === 'comments' && (
@@ -275,7 +271,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                         </div>
                     )}
                 </div>
-                <div className="flex justify-end p-4 border-t border-gray-200">
+                <div className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
                     <button onClick={handleSave} className="btn btn-primary">
                         Save Changes
                     </button>

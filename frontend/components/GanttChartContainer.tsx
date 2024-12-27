@@ -28,7 +28,7 @@ const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
   };
 
   return (
-    <div className={`mt-8 p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+    <div className={`mt-8 p-6 rounded-lg shadow-lg bg-base-100`}>
       <h2 className="text-2xl font-bold mb-6">Project Timeline</h2>
       <GanttChart onTaskUpdate={handleTaskUpdate} theme={theme} />
     </div>

@@ -7,6 +7,7 @@ import { RootState, AppDispatch } from '../store/store';
 import TaskModal from './TaskModal';
 import { Calendar, Clock, AlertCircle, CheckCircle2, Tag, User } from 'lucide-react';
 import { User as UserType } from '@/store/slices/userSlice';
+import { TagIcon } from 'lucide-react';
 
 const KanbanBoard: React.FC = () => {
     const { columns, columnOrder } = useSelector((state: RootState) => state.kanban);
@@ -15,6 +16,7 @@ const KanbanBoard: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const [selectedTask, setSelectedTask] = useState<string | null>(null);
     const users = useSelector((state: RootState) => state.users.users);
+    const tags = useSelector((state: RootState) => state.tags.tags);
 
     const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     const tasks = milestone ? milestone.tasks : [];
@@ -125,7 +127,17 @@ const KanbanBoard: React.FC = () => {
                                                                 <h3 className="card-title text-lg font-semibold mb-2">{task.title}</h3>
                                                                 <p className="text-sm text-base-content/70 line-clamp-2 mb-2">{task.description}</p>
                                                                 <div className="flex flex-wrap gap-2 mb-2">
-                                                                    {task.labels.map((label, index) => (
+                                                                    {task.tags.map((tagId) => {
+                                                                        const tag = tags.find(t => t.id === tagId);
+                                                                        return tag ? (
+                                                                            <span key={tag.id} className={`badge ${tag.color} text-white text-xs`}>
+                                                                                {tag.name}
+                                                                            </span>
+                                                                        ) : null;
+                                                                    })}
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                                    {(task.labels || []).map((label, index) => (
                                                                         <span key={index} className="badge badge-sm badge-primary">{label}</span>
                                                                     ))}
                                                                 </div>
@@ -134,14 +146,15 @@ const KanbanBoard: React.FC = () => {
                                                                         <Calendar size={14} />
                                                                         <span>{formatDate(task.startDate)}</span>
                                                                     </div>
-                                                                    <div className="flex items-center space-x-2">
+                                                                    {/* Removed date display */}
+                                                                    {/* <div className="flex items-center space-x-2">
                                                                         <Clock size={14} />
                                                                         <span>{formatDate(task.dueDate)}</span>
                                                                     </div>
                                                                     <div className="flex items-center space-x-2">
                                                                         <AlertCircle size={14} />
                                                                         <span>{formatDate(task.deadline)}</span>
-                                                                    </div>
+                                                                    </div> */}
                                                                 </div>
                                                                 <div className="flex items-center justify-between mt-2">
                                                                     <div className="flex items-center space-x-2">
@@ -156,7 +169,7 @@ const KanbanBoard: React.FC = () => {
                                                                     </div>
                                                                     <div className="flex items-center space-x-2">
                                                                         <Tag size={14} />
-                                                                        <span className="text-xs">{task.labels.length}</span>
+                                                                        <span className="text-xs">{(task.labels || []).length}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>

@@ -236,7 +236,7 @@ const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
   }, [tasks, criticalPathTasks, getCurrentTime, theme, users]);
 
   return (
-    <div className={`overflow-x-auto ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+    <div className={`overflow-x-auto bg-base-100`}>
       <svg ref={svgRef} className="gantt-chart"></svg>
     </div>
   );

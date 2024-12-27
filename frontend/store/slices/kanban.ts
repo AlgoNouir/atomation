@@ -7,6 +7,13 @@ interface Task {
     title: string;
     description: string;
     status: string;
+    checklist?: ChecklistItem[];
+}
+
+interface ChecklistItem {
+    id: string;
+    text: string;
+    isCompleted: boolean;
 }
 
 interface Column {
@@ -89,10 +96,16 @@ const kanbanSlice = createSlice({
                 }
             }
         },
+        updateTaskChecklist: (state, action: PayloadAction<{ taskId: string; updatedChecklist: ChecklistItem[] }>) => {
+            const task = state.tasks.find(t => t.id === action.payload.taskId);
+            if (task) {
+                task.checklist = action.payload.updatedChecklist;
+            }
+        },
     },
 });
 
-export const { moveTask, setTasks, updateTaskStatus } = kanbanSlice.actions;
+export const { moveTask, setTasks, updateTaskStatus, updateTaskChecklist } = kanbanSlice.actions;
 
 // Thunk to update task status and add log
 export const updateTaskStatusAndLog = (taskId: string, newStatus: string) => (dispatch: AppDispatch, getState: () => RootState) => {
@@ -102,6 +115,21 @@ export const updateTaskStatusAndLog = (taskId: string, newStatus: string) => (di
         const oldStatus = task.status;
         dispatch(updateTaskStatus({ taskId, newStatus }));
         dispatch(addLog({ message: `Task "${task.title}" moved from ${oldStatus} to ${newStatus}` }));
+    }
+};
+
+export const updateTaskChecklistAndLog = (taskId: string, updatedChecklist: ChecklistItem[]) => (dispatch: AppDispatch, getState: () => RootState) => {
+    const state = getState();
+    const task = state.kanban.tasks.find((t: Task) => t.id === taskId);
+    if (task) {
+        dispatch(updateTaskChecklist({ taskId, updatedChecklist }));
+        updatedChecklist.forEach(item => {
+            const oldItem = task.checklist.find(i => i.id === item.id);
+            if (oldItem && oldItem.isCompleted !== item.isCompleted) {
+                const action = item.isCompleted ? 'completed' : 'uncompleted';
+                dispatch(addLog({ message: `Checklist item "${item.text}" ${action} in task "${task.title}"` }));
+            }
+        });
     }
 };
 

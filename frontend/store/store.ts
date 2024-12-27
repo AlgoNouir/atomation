@@ -4,6 +4,7 @@ import projectReducer from './slices/project';
 import logReducer from './slices/logSlice';
 import { addLog } from './slices/logSlice';
 import userReducer from './slices/userSlice';
+import tagReducer from './slices/tagSlice';
 
 export const store = configureStore({
     reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
         projects: projectReducer,
         log: logReducer,
         users: userReducer,
+        tags: tagReducer,
     },
 });
 
