@@ -1,0 +1,168 @@
+# ====================================================== FRONTEND
+
+# dependencies
+frontend/node_modules
+frontend/.pnp
+frontend/.pnp.*
+frontend/.yarn/*
+frontend/!.yarn/patches
+frontend/!.yarn/plugins
+frontend/!.yarn/releases
+frontend/!.yarn/versions
+
+# testing
+frontend/coverage
+
+# next.js
+frontend/.next/
+frontend/out/
+
+# production
+frontend/build
+
+# misc
+frontend/.DS_Store
+frontend/*.pem
+
+# debug
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+frontend/.env*
+
+# vercel
+frontend/.vercel
+
+# typescript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+
+# ====================================================== BACKEND
+
+# dependencies
+/backend/web/node_modules
+/backend/web/*.pnp
+/backend/web/*.pnp.js
+
+# testing
+/backend/web/coverage
+
+# next.js
+/backend/web/.next/
+/backend/web/out/
+
+# production
+/backend/web/build
+
+# misc
+/backend/web/*.DS_Store
+/backend/web/*.pem
+
+# debug
+/backend/web/npm-debug.log*
+/backend/web/yarn-debug.log*
+/backend/web/yarn-error.log*
+
+# local env files
+/backend/web/*.env*.local
+
+# vercel
+/backend/web/*.vercel
+
+# typescript
+/backend/web/*.tsbuildinfo
+/backend/web/next-env.d.ts
+
+/backend/test
+
+# Created by https://www.gitignore.io
+
+### OSX ###
+/backend/.DS_Store
+/backend/.AppleDouble
+/backend/.LSOverride
+
+# Icon must end with two \r
+/backend/Icon
+
+# Thumbnails
+/backend/._*
+
+# Files that might appear on external disk
+/backend/.Spotlight-V100
+/backend/.Trashes
+
+# Directories potentially created on remote AFP share
+/backend/.AppleDB
+/backend/.AppleDesktop
+/backend/Network Trash Folder
+/backend/Temporary Items
+/backend/.apdisk
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+/backend/__pycache__/
+/backend/*.py[cod]
+
+# C extensions
+/backend/*.so
+
+# Distribution / packaging
+/backend/.Python
+/backend/env/
+/backend/build/
+/backend/develop-eggs/
+/backend/dist/
+/backend/downloads/
+/backend/eggs/
+/backend/lib/
+/backend/lib64/
+/backend/parts/
+/backend/sdist/
+/backend/var/
+/backend/*.egg-info/
+/backend/.installed.cfg
+/backend/*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+/backend/*.manifest
+/backend/*.spec
+
+# Installer logs
+/backend/pip-log.txt
+/backend/pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+/backend/htmlcov/
+/backend/.tox/
+/backend/.coverage
+/backend/.cache
+/backend/nosetests.xml
+/backend/coverage.xml
+
+# Translations
+/backend/*.mo
+/backend/*.pot
+
+# Sphinx documentation
+/backend/docs/_build/
+
+
+### Django ###
+/backend/*.log
+/backend/*.pot
+/backend/*.pyc
+/backend/__pycache__/
+/backend/local_settings.py
+
+/backend/.env
+/backend/db.sqlite3
+/backend/app
+
+venv
