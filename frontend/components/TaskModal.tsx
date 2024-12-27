@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { XIcon, Calendar, Tag, Paperclip, Plus, Trash } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
+import { updateTaskStatus } from '@/store/slices/kanban';
 
 interface TaskModalProps {
     taskId: string;
@@ -25,6 +26,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
 
     const handleInputChange = (field: string, value: any) => {
         setLocalTask({ ...localTask, [field]: value });
+        if (field === 'status' && milestone) {
+            dispatch(updateTaskStatus({ taskId: task.id, newStatus: value }));
+        }
     };
 
     const handleSave = () => {
@@ -127,12 +131,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                 <div className="flex items-center mt-2">
                                     <input
                                         type="text"
-                                        className="input input-bordered flex-grow"
+                                        className="input input-bordered flex-grow mr-2"
                                         value={newChecklistItem}
                                         onChange={(e) => setNewChecklistItem(e.target.value)}
                                         placeholder="Add new checklist item"
                                     />
-                                    <button className="btn btn-primary ml-2" onClick={addChecklistItem}>
+                                    <button className="btn btn-primary btn-square" onClick={addChecklistItem}>
                                         <Plus size={20} />
                                     </button>
                                 </div>
@@ -153,12 +157,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                 <div className="flex items-center">
                                     <input
                                         type="text"
-                                        className="input input-bordered flex-grow"
+                                        className="input input-bordered flex-grow mr-2"
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         placeholder="Add a comment"
                                     />
-                                    <button className="btn btn-primary ml-2" onClick={addComment}>
+                                    <button className="btn btn-primary btn-square" onClick={addComment}>
                                         <Plus size={20} />
                                     </button>
                                 </div>
@@ -243,7 +247,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                 <div className="flex items-center mt-2">
                                     <input
                                         type="text"
-                                        className="input input-bordered flex-grow"
+                                        className="input input-bordered flex-grow mr-2 w-full"
                                         placeholder="Add attachment URL"
                                         onKeyPress={(e) => {
                                             if (e.key === 'Enter') {
@@ -253,7 +257,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                             }
                                         }}
                                     />
-                                    <button className="btn btn-primary ml-2">
+                                    <button className="btn btn-primary btn-square">
                                         <Paperclip size={20} />
                                     </button>
                                 </div>

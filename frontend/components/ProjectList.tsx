@@ -109,7 +109,7 @@ const ProjectList: React.FC = () => {
         <input
           type="text"
           placeholder="New project name"
-          className="input input-bordered input-sm flex-grow"
+          className="input input-bordered input-sm flex-grow w-full"
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleAddProject()}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import KanbanBoard from '@/components/KanbanBoard';
+import GanttChartContainer from '@/components/GanttChartContainer';
 import ProjectList from '@/components/ProjectList';
 import { Sun, Moon } from 'lucide-react';
 
@@ -57,6 +58,7 @@ export default function KanbanPage() {
         <div className="flex">
           <div className="flex-grow overflow-x-auto">
             <KanbanBoard />
+            <GanttChartContainer />
           </div>
           <div className="ml-4 flex-shrink-0">
             <ProjectList />

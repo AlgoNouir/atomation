@@ -1,5 +1,5 @@
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { moveTask } from '@/store/slices/kanban';
+import { moveTask, updateTaskStatus } from '@/store/slices/kanban';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { useState } from 'react';
@@ -30,12 +30,23 @@ const KanbanBoard = () => {
             return;
         }
 
+        const sourceColumn = columns[source.droppableId];
+        const destinationColumn = columns[destination.droppableId];
+
         dispatch(
             moveTask({
                 taskId: draggableId,
                 sourceColumnId: source.droppableId,
                 destinationColumnId: destination.droppableId,
                 newIndex: destination.index,
+            })
+        );
+
+        // Update the task status in the project slice
+        dispatch(
+            updateTaskStatus({
+                taskId: draggableId,
+                newStatus: destinationColumn.title,
             })
         );
     };
