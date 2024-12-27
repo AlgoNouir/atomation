@@ -1,14 +1,15 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { ClockIcon } from 'lucide-react';
+import { ClockIcon, UserIcon } from 'lucide-react';
+import { selectPermittedLogs } from '@/store/slices/logSlice';
 
 interface LogViewerProps {
   onShowMore: () => void;
 }
 
 const LogViewer: React.FC<LogViewerProps> = ({ onShowMore }) => {
-  const logs = useSelector((state: RootState) => state.log.entries);
+  const logs = useSelector(selectPermittedLogs);
 
   return (
     <div className="bg-base-100 rounded-lg shadow-md p-4">
@@ -30,7 +31,13 @@ const LogViewer: React.FC<LogViewerProps> = ({ onShowMore }) => {
               <ClockIcon size={14} className="text-primary mt-1 flex-shrink-0" />
               <div>
                 <p>{log.message}</p>
-                <span className="text-xs text-gray-500">{new Date(log.timestamp).toLocaleString()}</span>
+                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                  <span>{new Date(log.timestamp).toLocaleString()}</span>
+                  <span className="flex items-center">
+                    <UserIcon size={12} className="mr-1" />
+                    {log.person}
+                  </span>
+                </div>
               </div>
             </li>
           ))}

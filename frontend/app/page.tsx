@@ -4,10 +4,19 @@ import { useState, useEffect } from 'react';
 import KanbanBoard from '@/components/KanbanBoard';
 import GanttChartContainer from '@/components/GanttChartContainer';
 import ProjectList from '@/components/ProjectList';
-import { Sun, Moon } from 'lucide-react';
+import SettingsModal from '@/components/SettingsModal';
+import TeamModal from '@/components/TeamModal';
+import { Sun, Moon, Settings, LogOut, Users } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store/store';
+import { logout } from '@/store/slices/accountSlice';
 
 export default function KanbanPage() {
   const [theme, setTheme] = useState('light');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const account = useSelector((state: RootState) => state.account);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -15,6 +24,10 @@ export default function KanbanPage() {
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
   };
 
   return (
@@ -44,7 +57,16 @@ export default function KanbanPage() {
                         <a className="hover:text-primary" href="#teams">Teams</a>
                       </li>
                       <li>
-                        <a className="hover:text-primary" href="#settings">Settings</a>
+                        <button className="hover:text-primary flex items-center space-x-1" onClick={() => setIsSettingsOpen(true)}>
+                          <Settings size={16} />
+                          <span>Settings</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button className="hover:text-primary flex items-center space-x-1" onClick={() => setIsTeamModalOpen(true)}>
+                          <Users size={16} />
+                          <span>{account.role === 'owner' ? 'Team Stats' : 'Your Stats'}</span>
+                        </button>
                       </li>
                     </ul>
                   </nav>
@@ -55,6 +77,19 @@ export default function KanbanPage() {
                     >
                       {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                     </button>
+                    <div className="ml-4 flex items-center">
+                      <span className="text-sm font-medium text-base-content mr-2">{account.name}</span>
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content">
+                        {account.name.charAt(0)}
+                      </div>
+                    </div>
+                    <button
+                      className="ml-4 btn btn-ghost btn-sm"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={16} />
+                      <span className="ml-1">Logout</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -63,9 +98,11 @@ export default function KanbanPage() {
         </header>
         <main className="p-8 overflow-y-auto h-[calc(100vh-64px)]">
           <KanbanBoard />
-          <GanttChartContainer />
+          <GanttChartContainer theme={theme} />
         </main>
       </div>
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <TeamModal isOpen={isTeamModalOpen} onClose={() => setIsTeamModalOpen(false)} />
     </div>
   );
 }

@@ -108,26 +108,36 @@ const kanbanSlice = createSlice({
 export const { moveTask, setTasks, updateTaskStatus, updateTaskChecklist } = kanbanSlice.actions;
 
 // Thunk to update task status and add log
-export const updateTaskStatusAndLog = (taskId: string, newStatus: string) => (dispatch: AppDispatch, getState: () => RootState) => {
+export const updateTaskStatusAndLog = (taskId: string, newStatus: string, projectId: string) => (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const task = state.kanban.tasks.find((t: Task) => t.id === taskId);
+    const currentUser = state.account.name;
     if (task && task.status !== newStatus) {
         const oldStatus = task.status;
         dispatch(updateTaskStatus({ taskId, newStatus }));
-        dispatch(addLog({ message: `Task "${task.title}" moved from ${oldStatus} to ${newStatus}` }));
+        dispatch(addLog({
+            message: `Task "${task.title}" moved from ${oldStatus} to ${newStatus}`,
+            person: currentUser,
+            projectId
+        }));
     }
 };
 
-export const updateTaskChecklistAndLog = (taskId: string, updatedChecklist: ChecklistItem[]) => (dispatch: AppDispatch, getState: () => RootState) => {
+export const updateTaskChecklistAndLog = (taskId: string, updatedChecklist: ChecklistItem[], projectId: string) => (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const task = state.kanban.tasks.find((t: Task) => t.id === taskId);
+    const currentUser = state.account.name;
     if (task) {
         dispatch(updateTaskChecklist({ taskId, updatedChecklist }));
         updatedChecklist.forEach(item => {
             const oldItem = task.checklist.find(i => i.id === item.id);
             if (oldItem && oldItem.isCompleted !== item.isCompleted) {
                 const action = item.isCompleted ? 'completed' : 'uncompleted';
-                dispatch(addLog({ message: `Checklist item "${item.text}" ${action} in task "${task.title}"` }));
+                dispatch(addLog({
+                    message: `Checklist item "${item.text}" ${action} in task "${task.title}"`,
+                    person: currentUser,
+                    projectId
+                }));
             }
         });
     }

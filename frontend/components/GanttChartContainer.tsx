@@ -13,6 +13,12 @@ interface GanttChartContainerProps {
 const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
   const dispatch = useDispatch<AppDispatch>();
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
+  const tasks = useSelector((state: RootState) => {
+    const milestone = state.projects.projects
+      .flatMap(p => p.milestones)
+      .find(m => m.id === selectedMilestone);
+    return milestone ? milestone.tasks : [];
+  });
 
   const handleTaskUpdate = (updatedTask: Task) => {
     if (selectedMilestone) {
@@ -30,7 +36,7 @@ const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
   return (
     <div className={`mt-8 p-6 rounded-lg shadow-lg bg-base-100`}>
       <h2 className="text-2xl font-bold mb-6">Project Timeline</h2>
-      <GanttChart onTaskUpdate={handleTaskUpdate} theme={theme} />
+      <GanttChart onTaskUpdate={handleTaskUpdate} theme={theme} tasks={tasks} />
     </div>
   );
 };

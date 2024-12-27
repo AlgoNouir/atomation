@@ -6,12 +6,13 @@ export interface Dependency {
 
 export interface Task {
     id: string;
-    name: string;
-    startDate: Date;
-    endDate: Date;
-    deadline: Date;
-    assignedTo: string;
+    title: string;
+    startDate: string;
+    dueDate: string;
+    deadline: string;
+    assignee: string | null;
     dependencies: Dependency[];
+    status: string;
     isMilestone: boolean;
     isComplete: boolean;
     isCriticalPath: boolean;

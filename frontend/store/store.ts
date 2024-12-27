@@ -5,6 +5,7 @@ import logReducer from './slices/logSlice';
 import { addLog } from './slices/logSlice';
 import userReducer from './slices/userSlice';
 import tagReducer from './slices/tagSlice';
+import accountReducer from './slices/accountSlice';
 
 export const store = configureStore({
     reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
         log: logReducer,
         users: userReducer,
         tags: tagReducer,
+        account: accountReducer,
     },
 });
 

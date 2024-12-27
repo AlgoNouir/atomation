@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { moveTask, updateTaskStatusAndLog } from '@/store/slices/kanban';
-import { updateTask } from '@/store/slices/project';
+import { updateTask, selectPermittedTasks } from '@/store/slices/project';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import TaskModal from './TaskModal';
-import { Calendar, Clock, AlertCircle, CheckCircle2, Tag, User } from 'lucide-react';
+import TaskDependencyModal from './TaskDependencyModal';
+import { Calendar, Clock, AlertCircle, CheckCircle2, Tag, User, Link } from 'lucide-react';
 import { User as UserType } from '@/store/slices/userSlice';
 import { TagIcon } from 'lucide-react';
+import { UserRole } from '@/store/slices/accountSlice';
 
 const KanbanBoard: React.FC = () => {
     const { columns, columnOrder } = useSelector((state: RootState) => state.kanban);
@@ -15,11 +17,20 @@ const KanbanBoard: React.FC = () => {
     const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
     const dispatch = useDispatch<AppDispatch>();
     const [selectedTask, setSelectedTask] = useState<string | null>(null);
+    const [isDependencyModalOpen, setIsDependencyModalOpen] = useState(false);
     const users = useSelector((state: RootState) => state.users.users);
     const tags = useSelector((state: RootState) => state.tags.tags);
+    const userRole = useSelector((state: RootState) => state.account.role);
+    const currentUser = useSelector((state: RootState) => state.account);
+    const permittedTasks = useSelector(selectPermittedTasks);
 
-    const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
-    const tasks = milestone ? milestone.tasks : [];
+    const tasks = permittedTasks.filter(t => {
+        const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
+        return milestone && milestone.tasks.some(mt => mt.id === t.id);
+    });
+
+    //const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
+    //const tasks = milestone ? milestone.tasks : [];
 
     const onDragEnd = (result: any) => {
         const { destination, source, draggableId } = result;
@@ -70,6 +81,12 @@ const KanbanBoard: React.FC = () => {
         setSelectedTask(null);
     };
 
+    const handleManageDependencies = (e: React.MouseEvent, taskId: string) => {
+        e.stopPropagation();
+        setSelectedTask(taskId);
+        setIsDependencyModalOpen(true);
+    };
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'To Do':
@@ -94,6 +111,18 @@ const KanbanBoard: React.FC = () => {
         return <div className="text-center py-8">Please select a milestone to view tasks.</div>;
     }
 
+    const project = projects.find(p => p.milestones.some(m => m.id === selectedMilestone));
+    if (!project) {
+        return <div className="text-center py-8">Project not found.</div>;
+    }
+
+    const userPermission = project.permissions.find(p => p.userId === currentUser.id);
+    if (!userPermission && userRole !== 'owner') {
+        return <div className="text-center py-8">You don't have permission to view this project.</div>;
+    }
+
+    const canEdit = userRole === 'owner' || userPermission?.role === 'admin' || userPermission?.role === 'editor';
+
     return (
         <>
             <DragDropContext onDragEnd={onDragEnd}>
@@ -113,7 +142,7 @@ const KanbanBoard: React.FC = () => {
                                             className="space-y-4"
                                         >
                                             {columnTasks.map((task, index) => (
-                                                <Draggable key={task.id} draggableId={task.id} index={index}>
+                                                <Draggable key={task.id} draggableId={task.id} index={index} isDragDisabled={!canEdit}>
                                                     {(provided) => (
                                                         <div
                                                             ref={provided.innerRef}
@@ -146,15 +175,6 @@ const KanbanBoard: React.FC = () => {
                                                                         <Calendar size={14} />
                                                                         <span>{formatDate(task.startDate)}</span>
                                                                     </div>
-                                                                    {/* Removed date display */}
-                                                                    {/* <div className="flex items-center space-x-2">
-                                                                        <Clock size={14} />
-                                                                        <span>{formatDate(task.dueDate)}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center space-x-2">
-                                                                        <AlertCircle size={14} />
-                                                                        <span>{formatDate(task.deadline)}</span>
-                                                                    </div> */}
                                                                 </div>
                                                                 <div className="flex items-center justify-between mt-2">
                                                                     <div className="flex items-center space-x-2">
@@ -172,6 +192,15 @@ const KanbanBoard: React.FC = () => {
                                                                         <span className="text-xs">{(task.labels || []).length}</span>
                                                                     </div>
                                                                 </div>
+                                                                {(userRole === 'admin' || userRole === 'owner') && (
+                                                                    <button
+                                                                        className="btn btn-xs btn-ghost mt-2"
+                                                                        onClick={(e) => handleManageDependencies(e, task.id)}
+                                                                    >
+                                                                        <Link size={14} />
+                                                                        Manage Dependencies
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     )}
@@ -187,7 +216,15 @@ const KanbanBoard: React.FC = () => {
                 </div>
             </DragDropContext>
             {selectedTask && (
-                <TaskModal taskId={selectedTask} onClose={closeModal} />
+                <>
+                    <TaskModal taskId={selectedTask} onClose={closeModal} />
+                    <TaskDependencyModal
+                        isOpen={isDependencyModalOpen}
+                        onClose={() => setIsDependencyModalOpen(false)}
+                        taskId={selectedTask}
+                        milestoneId={selectedMilestone || ''}
+                    />
+                </>
             )}
         </>
     );

@@ -41,10 +41,16 @@ interface Milestone {
     tasks: Task[];
 }
 
+interface ProjectPermission {
+    userId: string;
+    role: 'viewer' | 'editor' | 'admin';
+}
+
 interface Project {
     id: string;
     name: string;
     milestones: Milestone[];
+    permissions: ProjectPermission[];
 }
 
 interface ProjectState {
@@ -154,6 +160,9 @@ const initialState: ProjectState = {
                         },
                     ]
                 },
+            ],
+            permissions: [
+                { userId: 'user-1', role: 'admin' },
             ]
         },
     ],
@@ -164,11 +173,12 @@ const projectSlice = createSlice({
     name: 'projects',
     initialState,
     reducers: {
-        addProject: (state, action: PayloadAction<{ name: string }>) => {
+        addProject: (state, action: PayloadAction<{ name: string; ownerId: string }>) => {
             const newProject: Project = {
                 id: Date.now().toString(),
                 name: action.payload.name,
                 milestones: [],
+                permissions: [{ userId: action.payload.ownerId, role: 'admin' }],
             };
             state.projects.push(newProject);
         },
@@ -186,7 +196,7 @@ const projectSlice = createSlice({
         setSelectedMilestone: (state, action: PayloadAction<string | null>) => {
             state.selectedMilestone = action.payload;
         },
-        updateTask: (state, action: PayloadAction<{ milestoneId: string; taskId: string; updates: Partial<Task>; updatedChecklist?: ChecklistItem[] }>) => {
+        updateTask: (state, action: PayloadAction<{ milestoneId: string; taskId: string; updates: Partial<Task> }>) => {
             const project = state.projects.find(project => project.milestones.some(milestone => milestone.id === action.payload.milestoneId));
             if (project) {
                 const milestone = project.milestones.find(milestone => milestone.id === action.payload.milestoneId);
@@ -198,9 +208,39 @@ const projectSlice = createSlice({
                 }
             }
         },
+        updateProjectPermissions: (state, action: PayloadAction<{ projectId: string; permissions: ProjectPermission[] }>) => {
+            const project = state.projects.find(p => p.id === action.payload.projectId);
+            if (project) {
+                project.permissions = action.payload.permissions;
+            }
+        },
+        addTask: (state, action: PayloadAction<{ milestoneId: string; task: Task }>) => {
+            const { milestoneId, task } = action.payload;
+            const milestone = state.projects
+                .flatMap(p => p.milestones)
+                .find(m => m.id === milestoneId);
+            if (milestone) {
+                milestone.tasks.push(task);
+            }
+        },
     },
 });
 
-export const { addProject, addMilestone, setSelectedMilestone, updateTask } = projectSlice.actions;
+export const { addProject, addMilestone, setSelectedMilestone, updateTask, updateProjectPermissions, addTask } = projectSlice.actions;
 export default projectSlice.reducer;
+
+export const selectPermittedTasks = (state: RootState) => {
+    const { role, id, permittedProjects } = state.account;
+    const allProjects = state.projects.projects;
+
+    if (role === 'owner' || role === 'admin') {
+        return allProjects.flatMap(p => p.milestones).flatMap(m => m.tasks);
+    }
+
+    return allProjects
+        .filter(p => permittedProjects.includes(p.id))
+        .flatMap(p => p.milestones)
+        .flatMap(m => m.tasks)
+        .filter(task => task.assignee === id);
+};
 

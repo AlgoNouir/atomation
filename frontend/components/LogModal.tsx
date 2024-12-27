@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { ClockIcon, XIcon, ActivityIcon, CalendarIcon } from 'lucide-react';
+import { ClockIcon, XIcon, ActivityIcon, CalendarIcon, UserIcon } from 'lucide-react';
+import { selectPermittedLogs } from '@/store/slices/logSlice';
 
 interface LogModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface LogEntry {
   id: string;
   timestamp: string;
   message: string;
+  person: string;
 }
 
 interface GroupedLogs {
@@ -19,7 +21,7 @@ interface GroupedLogs {
 }
 
 const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
-  const logs = useSelector((state: RootState) => state.log.entries);
+  const logs = useSelector(selectPermittedLogs);
 
   const groupedLogs = useMemo(() => {
     return logs.reduce((groups: GroupedLogs, log) => {
@@ -63,10 +65,16 @@ const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
                           </div>
                           <div className="bg-base-200 p-3 rounded-lg ml-4">
                             <p>{log.message}</p>
-                            <p className="text-sm text-base-content/70 mt-1 flex items-center">
-                              <ClockIcon size={12} className="mr-1" />
-                              {new Date(log.timestamp).toLocaleTimeString()}
-                            </p>
+                            <div className="flex items-center justify-between text-sm text-base-content/70 mt-1">
+                              <div className="flex items-center">
+                                <ClockIcon size={12} className="mr-1" />
+                                {new Date(log.timestamp).toLocaleTimeString()}
+                              </div>
+                              <div className="flex items-center">
+                                <UserIcon size={12} className="mr-1" />
+                                {log.person}
+                              </div>
+                            </div>
                           </div>
                           {index < logsForDate.length - 1 && (
                             <div className="divider my-2"></div>

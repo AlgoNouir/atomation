@@ -58,6 +58,35 @@ const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
     return new Date();
   };
 
+  const drawDependency = (svg: d3.Selection<SVGGElement, unknown, null, undefined>, from: Task, to: Task, type: Dependency['type'], timeScale: d3.ScaleTime<number, number>, taskScale: d3.ScaleBand<string>) => {
+    const fromX = timeScale(new Date(from.dueDate));
+    const fromY = taskScale(from.id)! + taskScale.bandwidth() / 2;
+    const toX = timeScale(new Date(to.startDate));
+    const toY = taskScale(to.id)! + taskScale.bandwidth() / 2;
+
+    const midX = (fromX + toX) / 2;
+
+    const path = `M ${fromX} ${fromY} 
+                  C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`;
+
+    svg.append('path')
+      .attr('d', path)
+      .attr('stroke', theme === 'dark' ? '#9ca3af' : '#6b7280')
+      .attr('stroke-width', 1.5)
+      .attr('fill', 'none')
+      .attr('marker-end', 'url(#arrowhead)');
+
+    // Add dependency type label
+    svg.append('text')
+      .attr('x', midX)
+      .attr('y', (fromY + toY) / 2)
+      .attr('dy', -5)
+      .attr('text-anchor', 'middle')
+      .attr('fill', theme === 'dark' ? '#d1d5db' : '#4b5563')
+      .attr('font-size', '10px')
+      .text(type);
+  };
+
   useEffect(() => {
     if (tasks.length === 0 || !svgRef.current) return;
 
@@ -159,40 +188,12 @@ const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
       .attr('stroke-dasharray', '4,4');
 
     // Draw dependencies
-    const drawDependency = (from: Task, to: Task, type: Dependency['type']) => {
-      const fromX = timeScale(new Date(from.dueDate));
-      const fromY = taskScale(from.id)! + taskScale.bandwidth() / 2;
-      const toX = timeScale(new Date(to.startDate));
-      const toY = taskScale(to.id)! + taskScale.bandwidth() / 2;
-
-      const midX = (fromX + toX) / 2;
-
-      const path = `M ${fromX} ${fromY} 
-                    C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`;
-
-      svg.append('path')
-        .attr('d', path)
-        .attr('stroke', theme === 'dark' ? '#9ca3af' : '#6b7280')
-        .attr('stroke-width', 1.5)
-        .attr('fill', 'none')
-        .attr('marker-end', 'url(#arrowhead)');
-
-      // Add dependency type label
-      svg.append('text')
-        .attr('x', midX)
-        .attr('y', (fromY + toY) / 2)
-        .attr('dy', -5)
-        .attr('text-anchor', 'middle')
-        .attr('fill', theme === 'dark' ? '#d1d5db' : '#4b5563')
-        .attr('font-size', '10px')
-        .text(type);
-    };
-
     tasks.forEach(task => {
       task.dependencies.forEach(dep => {
         const fromTask = tasks.find(t => t.id === dep.from);
-        if (fromTask) {
-          drawDependency(fromTask, task, dep.type);
+        const toTask = tasks.find(t => t.id === dep.to);
+        if (fromTask && toTask) {
+          drawDependency(svg, fromTask, toTask, dep.type, timeScale, taskScale);
         }
       });
     });
