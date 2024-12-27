@@ -24,10 +24,11 @@ interface Task {
     title: string;
     description: string;
     labels: string[];
-    startDate: string;
-    dueDate: string;
+    startDate: string; // ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
+    dueDate: string; // ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
+    deadline: string; // ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
     checklist: ChecklistItem[];
-    assignees: string[];
+    assignee: string | null;
     attachments: string[];
     status: 'To Do' | 'In Progress' | 'Under Review' | 'Done';
     comments: Comment[];
@@ -66,10 +67,11 @@ const initialState: ProjectState = {
                             title: 'Requirement Gathering',
                             description: 'Collect and document project requirements',
                             labels: ['planning'],
-                            startDate: '2024-01-01',
-                            dueDate: '2024-01-03',
+                            startDate: '2024-01-01T09:00:00.000Z',
+                            dueDate: '2024-01-03T17:00:00.000Z',
+                            deadline: '2024-01-04T17:00:00.000Z',
                             checklist: [],
-                            assignees: ['Project Manager'],
+                            assignee: 'user-1',
                             attachments: [],
                             status: 'To Do',
                             comments: [],
@@ -80,10 +82,11 @@ const initialState: ProjectState = {
                             title: 'Design UI Mockups',
                             description: 'Create visual designs for the new website',
                             labels: ['design'],
-                            startDate: '2024-01-04',
-                            dueDate: '2024-01-08',
+                            startDate: '2024-01-04T09:00:00.000Z',
+                            dueDate: '2024-01-08T17:00:00.000Z',
+                            deadline: '2024-01-09T17:00:00.000Z',
                             checklist: [],
-                            assignees: ['UX Designer'],
+                            assignee: 'user-2',
                             attachments: [],
                             status: 'To Do',
                             comments: [],
@@ -100,10 +103,11 @@ const initialState: ProjectState = {
                             title: 'Develop Core Features',
                             description: 'Implement main functionality of the website',
                             labels: ['development'],
-                            startDate: '2024-01-09',
-                            dueDate: '2024-01-20',
+                            startDate: '2024-01-09T09:00:00.000Z',
+                            dueDate: '2024-01-20T17:00:00.000Z',
+                            deadline: '2024-01-22T17:00:00.000Z',
                             checklist: [],
-                            assignees: ['Development Team'],
+                            assignee: 'user-1',
                             attachments: [],
                             status: 'To Do',
                             comments: [],
@@ -114,10 +118,11 @@ const initialState: ProjectState = {
                             title: 'Testing and QA',
                             description: 'Perform thorough testing of the implemented features',
                             labels: ['testing', 'qa'],
-                            startDate: '2024-01-21',
-                            dueDate: '2024-01-25',
+                            startDate: '2024-01-21T09:00:00.000Z',
+                            dueDate: '2024-01-25T17:00:00.000Z',
+                            deadline: '2024-01-26T17:00:00.000Z',
                             checklist: [],
-                            assignees: ['QA Team'],
+                            assignee: 'user-3',
                             attachments: [],
                             status: 'To Do',
                             comments: [],

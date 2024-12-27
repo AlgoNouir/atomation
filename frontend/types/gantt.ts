@@ -9,6 +9,7 @@ export interface Task {
     name: string;
     startDate: Date;
     endDate: Date;
+    deadline: Date;
     assignedTo: string;
     dependencies: Dependency[];
     isMilestone: boolean;

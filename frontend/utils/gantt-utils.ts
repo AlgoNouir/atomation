@@ -1,7 +1,7 @@
 import { Task, Dependency } from '@/types/gantt';
 
 export function calculateTaskDuration(task: Task): number {
-  return Math.ceil((new Date(task.dueDate).getTime() - new Date(task.startDate).getTime()) / (1000 * 60 * 60 * 24));
+  return Math.ceil((new Date(task.dueDate).getTime() - new Date(task.startDate).getTime()) / (1000 * 60 * 60));
 }
 
 export function isTaskDependent(task: Task, dependentOn: Task): boolean {
@@ -31,7 +31,7 @@ export function calculateCriticalPath(tasks: Task[]): string[] {
 
     earlyDates.set(task.id, {
       start: earliestStart,
-      finish: earliestStart + calculateTaskDuration(task) * 24 * 60 * 60 * 1000
+      finish: earliestStart + calculateTaskDuration(task) * 60 * 60 * 1000
     });
   });
 
@@ -40,12 +40,12 @@ export function calculateCriticalPath(tasks: Task[]): string[] {
   [...sortedTasks].reverse().forEach(task => {
     const dependentTasks = tasks.filter(t => t.dependencies.some(dep => dep.from === task.id));
     const latestFinish = dependentTasks.length === 0
-      ? new Date(task.dueDate).getTime()
+      ? new Date(task.deadline).getTime()
       : Math.min(...dependentTasks.map(t => lateDates.get(t.id)?.start || Infinity));
 
     lateDates.set(task.id, {
       finish: latestFinish,
-      start: latestFinish - calculateTaskDuration(task) * 24 * 60 * 60 * 1000
+      start: latestFinish - calculateTaskDuration(task) * 60 * 60 * 1000
     });
 
     // If early dates equal late dates, task is on critical path

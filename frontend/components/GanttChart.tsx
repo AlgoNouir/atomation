@@ -2,20 +2,61 @@
 
 import React, { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
-import { Task, GanttData, Dependency } from '@/types/gantt';
+import { Task, Dependency } from '@/types/gantt';
 import { calculateTaskDuration, calculateCriticalPath } from '@/utils/gantt-utils';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
+import { User } from '@/store/slices/userSlice';
 
-const GanttChart: React.FC = () => {
+interface GanttChartProps {
+  onTaskUpdate: (updatedTask: Task) => void;
+  theme: 'light' | 'dark';
+}
+
+const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const projects = useSelector((state: RootState) => state.projects.projects);
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
+  const users = useSelector((state: RootState) => state.users.users);
 
   const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
   const tasks = milestone ? milestone.tasks : [];
 
   const criticalPathTasks = useMemo(() => calculateCriticalPath(tasks), [tasks]);
+
+  const getStatusColor = (status: string) => {
+    if (theme === 'dark') {
+      switch (status) {
+        case 'To Do':
+          return '#3b82f6'; // blue-500
+        case 'In Progress':
+          return '#facc15'; // yellow-400
+        case 'Debt':
+          return '#f87171'; // red-400
+        case 'Done':
+          return '#4ade80'; // green-400
+        default:
+          return '#9ca3af'; // gray-400
+      }
+    } else {
+      switch (status) {
+        case 'To Do':
+          return '#2563eb'; // blue-600
+        case 'In Progress':
+          return '#d97706'; // yellow-600
+        case 'Debt':
+          return '#dc2626'; // red-600
+        case 'Done':
+          return '#16a34a'; // green-600
+        default:
+          return '#4b5563'; // gray-600
+      }
+    }
+  };
+
+  const getCurrentTime = () => {
+    return new Date();
+  };
 
   useEffect(() => {
     if (tasks.length === 0 || !svgRef.current) return;
@@ -34,7 +75,7 @@ const GanttChart: React.FC = () => {
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
     const startDate = d3.min(tasks, d => new Date(d.startDate)) || new Date();
-    const endDate = d3.max(tasks, d => new Date(d.dueDate)) || new Date();
+    const endDate = d3.max(tasks, d => new Date(d.deadline)) || new Date();
 
     // Create scales
     const timeScale = d3.scaleTime()
@@ -53,7 +94,8 @@ const GanttChart: React.FC = () => {
 
     svg.append('g')
       .attr('class', 'time-axis')
-      .call(timeAxis);
+      .call(timeAxis)
+      .attr('color', theme === 'dark' ? '#e5e7eb' : '#4b5563');
 
     // Draw grid lines
     svg.append('g')
@@ -66,7 +108,7 @@ const GanttChart: React.FC = () => {
       .attr('x2', d => timeScale(d))
       .attr('y1', 0)
       .attr('y2', height)
-      .attr('stroke', '#e5e7eb')
+      .attr('stroke', theme === 'dark' ? '#374151' : '#e5e7eb')
       .attr('stroke-dasharray', '2,2');
 
     // Draw task bars
@@ -83,23 +125,38 @@ const GanttChart: React.FC = () => {
       .attr('y', taskScale.bandwidth() / 2)
       .attr('dy', '0.35em')
       .attr('text-anchor', 'end')
-      .text(d => `${d.title} (${d.assignees[0]})`);
+      .attr('fill', theme === 'dark' ? '#e5e7eb' : '#4b5563')
+      .text(d => {
+        const assignee = d.assignees ? users.find(u => u.id === d.assignees[0])?.name : 'Unassigned';
+        return `${d.title} (${assignee})`;
+      });
 
-    // Task bars
+    // Task bars (start to due)
     taskGroups.append('rect')
       .attr('class', 'task-bar')
       .attr('x', d => timeScale(new Date(d.startDate)))
       .attr('y', 0)
-      .attr('width', d => {
-        const duration = calculateTaskDuration(d);
-        return timeScale(new Date(new Date(d.startDate).getTime() + duration * 24 * 60 * 60 * 1000)) - timeScale(new Date(d.startDate));
-      })
+      .attr('width', d => timeScale(new Date(d.dueDate)) - timeScale(new Date(d.startDate)))
       .attr('height', taskScale.bandwidth())
       .attr('rx', 3)
       .attr('ry', 3)
-      .attr('fill', d => criticalPathTasks.includes(d.id) ? '#ef4444' : '#3b82f6')
-      .attr('stroke', d => criticalPathTasks.includes(d.id) ? '#dc2626' : '#2563eb')
+      .attr('fill', d => getStatusColor(d.status))
+      .attr('stroke', d => d3.color(getStatusColor(d.status))?.darker().toString() || '#000000')
       .attr('stroke-width', 2);
+
+    // Dotted rectangles (due to deadline)
+    taskGroups.append('rect')
+      .attr('class', 'deadline-bar')
+      .attr('x', d => timeScale(new Date(d.dueDate)))
+      .attr('y', 0)
+      .attr('width', d => timeScale(new Date(d.deadline)) - timeScale(new Date(d.dueDate)))
+      .attr('height', taskScale.bandwidth())
+      .attr('rx', 3)
+      .attr('ry', 3)
+      .attr('fill', 'none')
+      .attr('stroke', d => d3.color(getStatusColor(d.status))?.darker().toString() || '#000000')
+      .attr('stroke-width', 2)
+      .attr('stroke-dasharray', '4,4');
 
     // Draw dependencies
     const drawDependency = (from: Task, to: Task, type: Dependency['type']) => {
@@ -115,7 +172,7 @@ const GanttChart: React.FC = () => {
 
       svg.append('path')
         .attr('d', path)
-        .attr('stroke', '#9ca3af')
+        .attr('stroke', theme === 'dark' ? '#9ca3af' : '#6b7280')
         .attr('stroke-width', 1.5)
         .attr('fill', 'none')
         .attr('marker-end', 'url(#arrowhead)');
@@ -126,7 +183,7 @@ const GanttChart: React.FC = () => {
         .attr('y', (fromY + toY) / 2)
         .attr('dy', -5)
         .attr('text-anchor', 'middle')
-        .attr('fill', '#4b5563')
+        .attr('fill', theme === 'dark' ? '#d1d5db' : '#4b5563')
         .attr('font-size', '10px')
         .text(type);
     };
@@ -140,6 +197,27 @@ const GanttChart: React.FC = () => {
       });
     });
 
+    // Draw current time line
+    const currentTime = getCurrentTime();
+    if (currentTime >= startDate && currentTime <= endDate) {
+      svg.append('line')
+        .attr('x1', timeScale(currentTime))
+        .attr('x2', timeScale(currentTime))
+        .attr('y1', 0)
+        .attr('y2', height)
+        .attr('stroke', theme === 'dark' ? '#e5e7eb' : '#000000')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+
+      svg.append('text')
+        .attr('x', timeScale(currentTime))
+        .attr('y', -10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', theme === 'dark' ? '#e5e7eb' : '#000000')
+        .attr('font-size', '12px')
+        .text('Now');
+    }
+
     // Add arrowhead marker
     svg.append('defs').append('marker')
       .attr('id', 'arrowhead')
@@ -152,13 +230,13 @@ const GanttChart: React.FC = () => {
       .attr('xoverflow', 'visible')
       .append('path')
       .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-      .attr('fill', '#9ca3af')
+      .attr('fill', theme === 'dark' ? '#9ca3af' : '#6b7280')
       .style('stroke', 'none');
 
-  }, [tasks, criticalPathTasks]);
+  }, [tasks, criticalPathTasks, getCurrentTime, theme, users]);
 
   return (
-    <div className="overflow-x-auto">
+    <div className={`overflow-x-auto ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
       <svg ref={svgRef} className="gantt-chart"></svg>
     </div>
   );

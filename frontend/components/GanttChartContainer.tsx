@@ -6,7 +6,11 @@ import { RootState, AppDispatch } from '../store/store';
 import { updateTask } from '@/store/slices/project';
 import { Task } from '@/types/gantt';
 
-const GanttChartContainer: React.FC = () => {
+interface GanttChartContainerProps {
+  theme: 'light' | 'dark';
+}
+
+const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
   const dispatch = useDispatch<AppDispatch>();
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
 
@@ -24,9 +28,9 @@ const GanttChartContainer: React.FC = () => {
   };
 
   return (
-    <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
+    <div className={`mt-8 p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'}`}>
       <h2 className="text-2xl font-bold mb-6">Project Timeline</h2>
-      <GanttChart onTaskUpdate={handleTaskUpdate} />
+      <GanttChart onTaskUpdate={handleTaskUpdate} theme={theme} />
     </div>
   );
 };

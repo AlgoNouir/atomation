@@ -1,9 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { addLog } from './logSlice';
+import { AppDispatch } from '../store';
 
 interface Task {
     id: string;
     title: string;
     description: string;
+    status: string;
 }
 
 interface Column {
@@ -15,16 +18,18 @@ interface Column {
 interface KanbanState {
     columns: { [key: string]: Column };
     columnOrder: string[];
+    tasks: Task[];
 }
 
 const initialState: KanbanState = {
     columns: {
         'column-1': { id: 'column-1', title: 'To Do', taskIds: [] },
         'column-2': { id: 'column-2', title: 'In Progress', taskIds: [] },
-        'column-3': { id: 'column-3', title: 'Under Review', taskIds: [] },
+        'column-3': { id: 'column-3', title: 'Debt', taskIds: [] },
         'column-4': { id: 'column-4', title: 'Done', taskIds: [] },
     },
     columnOrder: ['column-1', 'column-2', 'column-3', 'column-4'],
+    tasks: [],
 };
 
 const kanbanSlice = createSlice({
@@ -38,24 +43,32 @@ const kanbanSlice = createSlice({
 
             sourceColumn.taskIds = sourceColumn.taskIds.filter(id => id !== taskId);
             destinationColumn.taskIds.splice(newIndex, 0, taskId);
+
+            if (destinationColumn.taskIds.length === 1) {
+                const task = state.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = destinationColumn.title;
+                }
+            }
         },
         setTasks: (state, action: PayloadAction<Task[]>) => {
-            // Reset all columns
             Object.values(state.columns).forEach(column => {
                 column.taskIds = [];
             });
 
-            // Distribute tasks to columns (for simplicity, all tasks start in 'To Do')
             action.payload.forEach(task => {
-                state.columns['column-1'].taskIds.push(task.id);
+                const column = Object.values(state.columns).find(col => col.title === task.status);
+                if (column) {
+                    column.taskIds.push(task.id);
+                }
             });
+            state.tasks = action.payload;
         },
         updateTaskStatus: (state, action: PayloadAction<{ taskId: string; newStatus: string }>) => {
             const { taskId, newStatus } = action.payload;
             let sourceColumnId: string | undefined;
             let destinationColumnId: string | undefined;
 
-            // Find the current column of the task
             Object.entries(state.columns).forEach(([columnId, column]) => {
                 if (column.taskIds.includes(taskId)) {
                     sourceColumnId = columnId;
@@ -65,16 +78,32 @@ const kanbanSlice = createSlice({
                 }
             });
 
-            if (sourceColumnId && destinationColumnId && sourceColumnId !== destinationColumnId) {
-                // Remove the task from the source column
-                state.columns[sourceColumnId].taskIds = state.columns[sourceColumnId].taskIds.filter(id => id !== taskId);
-                // Add the task to the destination column
-                state.columns[destinationColumnId].taskIds.push(taskId);
+            if (sourceColumnId && destinationColumnId) {
+                if (sourceColumnId !== destinationColumnId) {
+                    state.columns[sourceColumnId].taskIds = state.columns[sourceColumnId].taskIds.filter(id => id !== taskId);
+                    state.columns[destinationColumnId].taskIds.push(taskId);
+                }
+                const task = state.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = newStatus;
+                }
             }
         },
     },
 });
 
 export const { moveTask, setTasks, updateTaskStatus } = kanbanSlice.actions;
+
+// Thunk to update task status and add log
+export const updateTaskStatusAndLog = (taskId: string, newStatus: string) => (dispatch: AppDispatch, getState: () => RootState) => {
+    const state = getState();
+    const task = state.kanban.tasks.find((t: Task) => t.id === taskId);
+    if (task && task.status !== newStatus) {
+        const oldStatus = task.status;
+        dispatch(updateTaskStatus({ taskId, newStatus }));
+        dispatch(addLog({ message: `Task "${task.title}" moved from ${oldStatus} to ${newStatus}` }));
+    }
+};
+
 export default kanbanSlice.reducer;
 
