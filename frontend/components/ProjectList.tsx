@@ -12,6 +12,11 @@ import AddTaskModal from './AddTaskModal';
 import { UserRole } from '@/store/slices/accountSlice';
 import ProjectPermissionsModal from './ProjectPermissionsModal';
 
+interface Task {
+  status: string;
+  // ... other task properties
+}
+
 const ProjectList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const projects = useSelector((state: RootState) => state.projects.projects);
@@ -70,15 +75,16 @@ const ProjectList: React.FC = () => {
     setIsAddTaskModalOpen(true);
   };
 
-  const calculateTaskStats = (tasks) => {
+  const calculateTaskStats = (tasks: Task[]) => {
     const stats = {
       'To Do': 0,
       'In Progress': 0,
-      'Debt': 0,
       'Done': 0
     };
     tasks.forEach(task => {
-      stats[task.status]++;
+      if (stats.hasOwnProperty(task.status)) {
+        stats[task.status]++;
+      }
     });
     return stats;
   };
@@ -139,7 +145,6 @@ const ProjectList: React.FC = () => {
                             <div key={status} className="flex items-center space-x-1">
                               {status === 'To Do' && <Circle size={12} />}
                               {status === 'In Progress' && <CircleDot size={12} />}
-                              {status === 'Debt' && <Circle size={12} className="text-error" />}
                               {status === 'Done' && <CheckCircle size={12} />}
                               <span>{count}</span>
                             </div>

@@ -6,6 +6,8 @@ import './globals.css'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/store/store'
 import LoginPage from '@/components/LoginPage'
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function RootLayout({
   children,
@@ -14,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className='overflow-hidden'>
         <Provider store={store}>
           <AuthWrapper>{children}</AuthWrapper>
         </Provider>
@@ -24,11 +26,14 @@ export default function RootLayout({
 }
 
 const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const account = useSelector((state: RootState) => state.account);
+  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth);
+  const router = useRouter();
 
-  if (!account.id) {
-    return <LoginPage />;
+
+  if (!isAuthenticated || !token) {
+    return <LoginPage />
   }
+
 
   return <>{children}</>;
 };

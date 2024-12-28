@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store/store';
-import { addMilestone } from '@/store/slices/project';
+import { createMilestone } from '@/store/slices/project';
 import { X } from 'lucide-react';
 
 interface CreateMilestoneModalProps {
@@ -13,12 +13,24 @@ interface CreateMilestoneModalProps {
 const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ isOpen, onClose, projectId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [milestoneName, setMilestoneName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (milestoneName.trim()) {
-      dispatch(addMilestone({ projectId, name: milestoneName.trim() }));
-      setMilestoneName('');
-      onClose();
+      setIsLoading(true);
+      setError(null);
+      try {
+        await dispatch(createMilestone({ projectId, name: milestoneName.trim() })).unwrap();
+        setMilestoneName('');
+        onClose();
+      } catch (err) {
+        console.log(err);
+
+        setError('Failed to create milestone. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -47,10 +59,15 @@ const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ isOpen, onC
               placeholder="Enter milestone name"
             />
           </div>
+          {error && <p className="text-error text-sm">{error}</p>}
         </div>
         <div className="flex justify-end p-4 border-t border-base-300">
-          <button className="btn btn-primary" onClick={handleCreate}>
-            Create Milestone
+          <button
+            className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+            onClick={handleCreate}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Creating...' : 'Create Milestone'}
           </button>
         </div>
       </div>
@@ -59,3 +76,4 @@ const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ isOpen, onC
 };
 
 export default CreateMilestoneModal;
+

@@ -1,107 +1,317 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from .models import Project, ProjectPermission, Milestone, Task, ChecklistItem, Comment, Dependency, Tag, TaskTag, Log
-from .serializers import UserSerializer, ProjectSerializer, MilestoneSerializer, TaskSerializer, ChecklistItemSerializer, CommentSerializer, DependencySerializer, TagSerializer, LogSerializer
+from .serializers import (
+    UserSerializer, 
+    ProjectSerializer, 
+    MilestoneSerializer, 
+    TaskSerializer, 
+    ChecklistItemSerializer, 
+    CommentSerializer, 
+    DependencySerializer, 
+    TagSerializer, 
+    LogSerializer
+)
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-class ProjectViewSet(viewsets.ModelViewSet):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class UserAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        user = self.request.user
-        return Project.objects.filter(permissions__user=user)
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
-    def add_permission(self, request, pk=None):
-        project = self.get_object()
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ProjectAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        projects = Project.objects.filter(permissions__user=request.user).prefetch_related(
+            'milestones',
+            'milestones__tasks',
+            'milestones__tasks__checklist',
+            'milestones__tasks__comments',
+            'milestones__tasks__dependencies_from',
+            'milestones__tasks__tags',
+            'permissions'
+        )
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        print(request.data)
+        serializer = ProjectSerializer(data={**request.data, "owner":request.user.pk})
+        try:
+            serializer.is_valid(raise_exception=True)
+            project = serializer.save()
+            ProjectPermission.objects.create(
+                project=project,
+                user=request.user,
+                role='admin'
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        project = get_object_or_404(Project, pk=pk, permissions__user=request.user)
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        project = get_object_or_404(Project, pk=pk, permissions__user=request.user)
+        permission = project.permissions.get(user=request.user)
+        if permission.role not in ['admin', 'editor']:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = ProjectSerializer(project, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        project = get_object_or_404(Project, pk=pk, permissions__user=request.user)
+        permission = project.permissions.get(user=request.user)
+        if permission.role != 'admin':
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        
+        project.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ProjectPermissionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, project_pk):
+        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
+        permission = project.permissions.get(user=request.user)
+        if permission.role != 'admin':
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
         user_id = request.data.get('user_id')
         role = request.data.get('role')
-
+        
         if not user_id or not role:
-            return Response({'error': 'User ID and role are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({'error': 'User ID and role are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        ProjectPermission.objects.create(project=project, user=user, role=role)
-        return Response({'success': 'Permission added.'}, status=status.HTTP_201_CREATED)
+        project_permission, created = ProjectPermission.objects.get_or_create(
+            project=project,
+            user=user,
+            defaults={'role': role}
+        )
+        
+        if not created:
+            project_permission.role = role
+            project_permission.save()
 
-class MilestoneViewSet(viewsets.ModelViewSet):
-    queryset = Milestone.objects.all()
-    serializer_class = MilestoneSerializer
-    permission_classes = [permissions.IsAuthenticated]
+        return Response({'message': 'Permission updated successfully'})
 
-    def get_queryset(self):
-        user = self.request.user
-        return Milestone.objects.filter(project__permissions__user=user)
+class MilestoneAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, project_pk):
+        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
+        milestones = project.milestones.all()
+        serializer = MilestoneSerializer(milestones, many=True)
+        return Response(serializer.data)
 
-    def get_queryset(self):
-        user = self.request.user
-        return Task.objects.filter(milestone__project__permissions__user=user)
+    def post(self, request, project_pk):
+        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
+        permission = project.permissions.get(user=request.user)
+        if permission.role not in ['admin', 'editor']:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
-    @action(detail=True, methods=['post'])
-    def add_checklist_item(self, request, pk=None):
-        task = self.get_object()
+        serializer = MilestoneSerializer(data={**request.data, "project": project.pk})
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(project=project)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class TaskAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, milestone_pk):
+        milestone = get_object_or_404(Milestone, pk=milestone_pk, project__permissions__user=request.user)
+        tasks = milestone.tasks.all()
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, milestone_pk):
+
+        print(request.data)
+        milestone = get_object_or_404(Milestone, pk=milestone_pk, project__permissions__user=request.user)
+        permission = milestone.project.permissions.get(user=request.user)
+        if permission.role not in ['admin', 'editor']:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TaskSerializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            task = serializer.save(milestone=milestone)
+            
+            # Handle tags
+            tag_ids = request.data.get('tags', [])
+            for tag_id in tag_ids:
+                tag = get_object_or_404(Tag, id=tag_id)
+                TaskTag.objects.create(task=task, tag=tag)
+
+            return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+    def put(self, request, pk):
+        task = Task.objects.get(pk=pk)
+        serializer = TaskSerializer(task, data=request.data)
+        if serializer.is_valid():
+            updated_task = serializer.save()
+            return Response(TaskSerializer(updated_task).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        
+class TaskDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        task = get_object_or_404(Task, pk=pk, milestone__project__permissions__user=request.user)
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        task = get_object_or_404(Task, pk=pk, milestone__project__permissions__user=request.user)
+        permission = task.milestone.project.permissions.get(user=request.user)
+        if permission.role not in ['admin', 'editor']:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TaskSerializer(task, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        task = get_object_or_404(Task, pk=pk, milestone__project__permissions__user=request.user)
+        permission = task.milestone.project.permissions.get(user=request.user)
+        if permission.role not in ['admin', 'editor']:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ChecklistItemAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, task_pk):
+        task = get_object_or_404(Task, pk=task_pk, milestone__project__permissions__user=request.user)
+        permission = task.milestone.project.permissions.get(user=request.user)
+        if permission.role not in ['admin', 'editor']:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = ChecklistItemSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(task=task)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
-    def add_comment(self, request, pk=None):
-        task = self.get_object()
+class CommentAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, task_pk):
+        task = get_object_or_404(Task, pk=task_pk, milestone__project__permissions__user=request.user)
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(task=task, author=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
-    def add_dependency(self, request, pk=None):
-        task = self.get_object()
-        serializer = DependencySerializer(data=request.data)
+class TagAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        tags = Tag.objects.all()
+        serializer = TagSerializer(tags, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = TagSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(from_task=task)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class LogAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
-class LogViewSet(viewsets.ModelViewSet):
-    queryset = Log.objects.all()
-    serializer_class = LogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, project_pk):
+        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
+        logs = project.logs.all().order_by('-timestamp')
+        serializer = LogSerializer(logs, many=True)
+        return Response(serializer.data)
 
-    def get_queryset(self):
-        user = self.request.user
-        return Log.objects.filter(project__permissions__user=user)
+    def post(self, request, project_pk):
+        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
+        serializer = LogSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(project=project, user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            user = User.objects.get(username=request.data['username'])
-            user_data = UserSerializer(user).data
-            response.data['user'] = user_data
-        return response
+
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated, AllowAny]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 

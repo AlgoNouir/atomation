@@ -7,7 +7,7 @@ import { updateTaskStatusAndLog, updateTaskChecklistAndLog } from '@/store/slice
 import { User } from '@/store/slices/userSlice';
 import { Tag } from '@/store/slices/tagSlice';
 import { UserRole } from '@/store/slices/accountSlice';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 interface TaskModalProps {
     taskId: string;
@@ -47,7 +47,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const handleSave = () => {
         if (milestone) {
             const updatedChecklist = localTask.checklist.filter(
-                (item, index) => item.isCompleted !== task.checklist[index].isCompleted
+                (item, index) => item.isCompleted !== task.checklist[index]?.isCompleted
             );
             dispatch(updateTask({
                 milestoneId: milestone.id,
@@ -168,7 +168,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     {userRole === 'admin' || userRole === 'owner' ? (
                                         <input
                                             type="datetime-local"
-                                            value={format(new Date(localTask.startDate), "yyyy-MM-dd'T'HH:mm")}
+                                            value={isValid(new Date(localTask.startDate)) ? format(new Date(localTask.startDate), "yyyy-MM-dd'T'HH:mm") : ''}
                                             onChange={(e) => handleInputChange('startDate', e.target.value)}
                                             className="input input-bordered w-full"
                                         />
@@ -183,7 +183,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     {userRole === 'admin' || userRole === 'owner' ? (
                                         <input
                                             type="datetime-local"
-                                            value={format(new Date(localTask.dueDate), "yyyy-MM-dd'T'HH:mm")}
+                                            value={isValid(new Date(localTask.dueDate)) ? format(new Date(localTask.dueDate), "yyyy-MM-dd'T'HH:mm") : ''}
                                             onChange={(e) => handleInputChange('dueDate', e.target.value)}
                                             className="input input-bordered w-full"
                                         />
@@ -198,7 +198,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     {userRole === 'admin' || userRole === 'owner' ? (
                                         <input
                                             type="datetime-local"
-                                            value={format(new Date(localTask.deadline), "yyyy-MM-dd'T'HH:mm")}
+                                            value={isValid(new Date(localTask.deadline)) ? format(new Date(localTask.deadline), "yyyy-MM-dd'T'HH:mm") : ''}
                                             onChange={(e) => handleInputChange('deadline', e.target.value)}
                                             className="input input-bordered w-full"
                                         />

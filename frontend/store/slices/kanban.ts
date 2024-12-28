@@ -59,17 +59,20 @@ const kanbanSlice = createSlice({
             }
         },
         setTasks: (state, action: PayloadAction<Task[]>) => {
+            state.tasks = action.payload;
+
+            // Reset all column taskIds
             Object.values(state.columns).forEach(column => {
                 column.taskIds = [];
             });
 
+            // Distribute tasks to columns based on their status
             action.payload.forEach(task => {
                 const column = Object.values(state.columns).find(col => col.title === task.status);
                 if (column) {
                     column.taskIds.push(task.id);
                 }
             });
-            state.tasks = action.payload;
         },
         updateTaskStatus: (state, action: PayloadAction<{ taskId: string; newStatus: string }>) => {
             const { taskId, newStatus } = action.payload;

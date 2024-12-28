@@ -13,7 +13,7 @@ interface TaskDependencyModalProps {
 
 const TaskDependencyModal: React.FC<TaskDependencyModalProps> = ({ isOpen, onClose, taskId, milestoneId }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const tasks = useSelector((state: RootState) => 
+  const tasks = useSelector((state: RootState) =>
     state.projects.projects
       .flatMap(p => p.milestones)
       .find(m => m.id === milestoneId)?.tasks || []
@@ -89,12 +89,12 @@ const TaskDependencyModal: React.FC<TaskDependencyModalProps> = ({ isOpen, onClo
         <div>
           <h3 className="text-lg font-semibold mb-2">Existing Dependencies</h3>
           <ul className="space-y-2">
-            {currentTask.dependencies.map(dep => {
+            {(currentTask.dependencies || []).map(dep => {
               const dependentTask = tasks.find(t => t.id === dep.to);
               return (
                 <li key={dep.to} className="flex justify-between items-center">
                   <span>{dependentTask?.title} ({dep.type})</span>
-                  <button 
+                  <button
                     className="btn btn-sm btn-error"
                     onClick={() => handleRemoveDependency(dep.to)}
                   >

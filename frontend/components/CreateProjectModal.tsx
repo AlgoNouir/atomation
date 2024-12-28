@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store/store';
-import { addProject } from '@/store/slices/project';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../store/store';
+import { createProject } from '@/store/slices/project';
 import { X } from 'lucide-react';
 
 interface CreateProjectModalProps {
@@ -12,11 +12,10 @@ interface CreateProjectModalProps {
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [projectName, setProjectName] = useState('');
-  const currentUser = useSelector((state: RootState) => state.account);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (projectName.trim()) {
-      dispatch(addProject({ name: projectName.trim(), ownerId: currentUser.id }));
+      await dispatch(createProject(projectName.trim()));
       setProjectName('');
       onClose();
     }

@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '@/store/slices/authSlice';
 import { RootState } from '@/store/store';
+import { useRouter } from 'next/navigation';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading, error, isAuthenticated, redirectToPanel } = useSelector((state: RootState) => state.auth);
+  const router = useRouter();
+  console.log(isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/panel');
+    }
+  }, [isAuthenticated, redirectToPanel, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

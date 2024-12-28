@@ -24,10 +24,7 @@ const KanbanBoard: React.FC = () => {
     const currentUser = useSelector((state: RootState) => state.account);
     const permittedTasks = useSelector(selectPermittedTasks);
 
-    const tasks = permittedTasks.filter(t => {
-        const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
-        return milestone && milestone.tasks.some(mt => mt.id === t.id);
-    });
+    const tasks = useSelector((state: RootState) => state.kanban.tasks);
 
     //const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     //const tasks = milestone ? milestone.tasks : [];
@@ -111,7 +108,7 @@ const KanbanBoard: React.FC = () => {
         return <div className="text-center py-8">Please select a milestone to view tasks.</div>;
     }
 
-    const project = projects.find(p => p.milestones.some(m => m.id === selectedMilestone));
+    const project = projects.find(p => (p.milestones || []).some(m => m.id === selectedMilestone));
     if (!project) {
         return <div className="text-center py-8">Project not found.</div>;
     }
@@ -129,7 +126,9 @@ const KanbanBoard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     {columnOrder.map((columnId) => {
                         const column = columns[columnId];
-                        const columnTasks = column.taskIds.map(taskId => tasks.find(t => t.id === taskId)).filter(Boolean);
+                        const columnTasks = column.taskIds
+                            .map(taskId => tasks.find(t => t.id === taskId))
+                            .filter(Boolean);
 
                         return (
                             <div key={column.id} className="bg-base-200 rounded-lg p-4">
@@ -142,7 +141,7 @@ const KanbanBoard: React.FC = () => {
                                             className="space-y-4"
                                         >
                                             {columnTasks.map((task, index) => (
-                                                <Draggable key={task.id} draggableId={task.id} index={index} isDragDisabled={!canEdit}>
+                                                <Draggable key={task.id} draggableId={String(task.id)} index={index} isDragDisabled={!canEdit}>
                                                     {(provided) => (
                                                         <div
                                                             ref={provided.innerRef}

@@ -19,7 +19,7 @@ const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
   const users = useSelector((state: RootState) => state.users.users);
 
-  const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
+  const milestone = projects.flatMap(p => p.milestones).find(m => m?.id === selectedMilestone);
   const tasks = milestone ? milestone.tasks : [];
 
   const criticalPathTasks = useMemo(() => calculateCriticalPath(tasks), [tasks]);
@@ -189,7 +189,7 @@ const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
 
     // Draw dependencies
     tasks.forEach(task => {
-      task.dependencies.forEach(dep => {
+      (task.dependencies || []).forEach(dep => {
         const fromTask = tasks.find(t => t.id === dep.from);
         const toTask = tasks.find(t => t.id === dep.to);
         if (fromTask && toTask) {

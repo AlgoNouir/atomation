@@ -1,4 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { RootState } from '../store';
 
 export interface User {
   id: string;
@@ -9,15 +11,28 @@ export interface User {
 
 interface UserState {
   users: User[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
 }
 
 const initialState: UserState = {
-  users: [
-    { id: 'user-1', name: 'John Doe', email: 'john@example.com' },
-    { id: 'user-2', name: 'Jane Smith', email: 'jane@example.com' },
-    { id: 'user-3', name: 'Bob Johnson', email: 'bob@example.com' },
-  ],
+  users: [],
+  status: 'idle',
+  error: null,
 };
+
+export const fetchUsers = createAsyncThunk(
+  'users/fetchUsers',
+  async (_, { getState }) => {
+    const { auth } = getState() as RootState;
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/users/`, {
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+      },
+    });
+    return response.data;
+  }
+);
 
 const userSlice = createSlice({
   name: 'users',
@@ -35,6 +50,20 @@ const userSlice = createSlice({
     removeUser: (state, action: PayloadAction<string>) => {
       state.users = state.users.filter(user => user.id !== action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUsers.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+        state.status = 'succeeded';
+        state.users = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch users';
+      });
   },
 });
 

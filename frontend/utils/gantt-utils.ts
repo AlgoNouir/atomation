@@ -5,7 +5,7 @@ export function calculateTaskDuration(task: Task): number {
 }
 
 export function isTaskDependent(task: Task, dependentOn: Task): boolean {
-  return task.dependencies.some(dep => dep.from === dependentOn.id);
+  return (task.dependencies || []).some(dep => dep.from === dependentOn.id);
 }
 
 export function calculateCriticalPath(tasks: Task[]): string[] {
@@ -22,7 +22,7 @@ export function calculateCriticalPath(tasks: Task[]): string[] {
   const earlyDates = new Map<string, { start: number; finish: number }>();
   sortedTasks.forEach(task => {
     const dependencies = task.dependencies;
-    const earliestStart = dependencies.reduce((max, dep) => {
+    const earliestStart = (dependencies || []).reduce((max, dep) => {
       const dependencyTask = tasks.find(t => t.id === dep.from);
       if (!dependencyTask) return max;
       const depFinish = earlyDates.get(dep.from)?.finish || 0;
@@ -38,7 +38,7 @@ export function calculateCriticalPath(tasks: Task[]): string[] {
   // Calculate late start and late finish
   const lateDates = new Map<string, { start: number; finish: number }>();
   [...sortedTasks].reverse().forEach(task => {
-    const dependentTasks = tasks.filter(t => t.dependencies.some(dep => dep.from === task.id));
+    const dependentTasks = tasks.filter(t => (t.dependencies || []).some(dep => dep.from === task.id));
     const latestFinish = dependentTasks.length === 0
       ? new Date(task.deadline).getTime()
       : Math.min(...dependentTasks.map(t => lateDates.get(t.id)?.start || Infinity));

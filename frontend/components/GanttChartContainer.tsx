@@ -16,7 +16,7 @@ const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
   const tasks = useSelector((state: RootState) => {
     const milestone = state.projects.projects
       .flatMap(p => p.milestones)
-      .find(m => m.id === selectedMilestone);
+      .find(m => m?.id === selectedMilestone);
     return milestone ? milestone.tasks : [];
   });
 

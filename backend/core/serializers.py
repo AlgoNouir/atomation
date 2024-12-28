@@ -5,24 +5,12 @@ from .models import Project, ProjectPermission, Milestone, Task, ChecklistItem, 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 class ProjectPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPermission
         fields = ['id', 'user', 'role']
-
-class ProjectSerializer(serializers.ModelSerializer):
-    permissions = ProjectPermissionSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Project
-        fields = ['id', 'name', 'owner', 'permissions']
-
-class MilestoneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Milestone
-        fields = ['id', 'project', 'name']
 
 class ChecklistItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,16 +38,68 @@ class TaskTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskTag
         fields = ['id', 'tag']
+class ChecklistItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChecklistItem
+        fields = ['id', 'text', 'is_completed']
 
 class TaskSerializer(serializers.ModelSerializer):
-    checklist = ChecklistItemSerializer(many=True, read_only=True)
-    comments = CommentSerializer(many=True, read_only=True)
-    dependencies_from = DependencySerializer(many=True, read_only=True)
-    tags = TaskTagSerializer(many=True, read_only=True)
+    checklist = ChecklistItemSerializer(many=True, required=False)
 
     class Meta:
         model = Task
-        fields = ['id', 'milestone', 'title', 'description', 'status', 'assignee', 'start_date', 'due_date', 'deadline', 'checklist', 'comments', 'dependencies_from', 'tags']
+        fields = ['id', 'title', 'description', 'status', 'assignee', 'start_date', 'due_date', 'deadline', 'tags', 'checklist']
+    
+    
+    def create(self, validated_data):
+        tags_data = validated_data.pop('tags', [])
+        checklist_data = validated_data.pop('checklist', [])
+        task = Task.objects.create(**validated_data)
+        task.tags.set(tags_data)
+        for item_data in checklist_data:
+            ChecklistItem.objects.create(task=task, **item_data)
+        return task
+
+    def update(self, instance, validated_data):
+        tags_data = validated_data.pop('tags', None)
+        checklist_data = validated_data.pop('checklist', None)
+        
+        # Update task fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update tags if provided
+        if tags_data is not None:
+            instance.tags.set(tags_data)
+
+        # Update checklist items if provided
+        if checklist_data is not None:
+            instance.checklist.all().delete()
+            for item_data in checklist_data:
+                ChecklistItem.objects.create(task=instance, **item_data)
+
+        return instance
+
+    def update_checklist_item(self, instance, validated_data):
+        instance.text = validated_data.get('text', instance.text)
+        instance.is_completed = validated_data.get('is_completed', instance.is_completed)
+        instance.save()
+
+class MilestoneSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Milestone
+        fields = ['id', 'name', 'tasks']
+
+class ProjectSerializer(serializers.ModelSerializer):
+    permissions = ProjectPermissionSerializer(many=True, read_only=True)
+    milestones = MilestoneSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'owner', 'permissions', 'milestones']
 
 class LogSerializer(serializers.ModelSerializer):
     class Meta:

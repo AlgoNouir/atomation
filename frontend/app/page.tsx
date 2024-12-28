@@ -9,7 +9,7 @@ import TeamModal from '@/components/TeamModal';
 import { Sun, Moon, Settings, LogOut, Users } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
-import { logout } from '@/store/slices/accountSlice';
+import { logout, logoutUser } from '@/store/slices/authSlice';
 
 export default function KanbanPage() {
   const [theme, setTheme] = useState('light');
@@ -27,7 +27,7 @@ export default function KanbanPage() {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
   };
 
   return (

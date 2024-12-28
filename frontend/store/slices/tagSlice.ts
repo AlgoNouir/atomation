@@ -1,4 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { RootState } from '../store';
 
 export interface Tag {
   id: string;
@@ -8,17 +10,28 @@ export interface Tag {
 
 interface TagState {
   tags: Tag[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
 }
 
 const initialState: TagState = {
-  tags: [
-    { id: 'tag-1', name: 'Frontend', color: 'bg-blue-500' },
-    { id: 'tag-2', name: 'Backend', color: 'bg-green-500' },
-    { id: 'tag-3', name: 'Bug', color: 'bg-red-500' },
-    { id: 'tag-4', name: 'Feature', color: 'bg-purple-500' },
-    { id: 'tag-5', name: 'Documentation', color: 'bg-yellow-500' },
-  ],
+  tags: [],
+  status: 'idle',
+  error: null,
 };
+
+export const fetchTags = createAsyncThunk(
+  'tags/fetchTags',
+  async (_, { getState }) => {
+    const { auth } = getState() as RootState;
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/tags/`, {
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+      },
+    });
+    return response.data;
+  }
+);
 
 const tagSlice = createSlice({
   name: 'tags',
@@ -42,8 +55,21 @@ const tagSlice = createSlice({
       }
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTags.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchTags.fulfilled, (state, action: PayloadAction<Tag[]>) => {
+        state.status = 'succeeded';
+        state.tags = action.payload;
+      })
+      .addCase(fetchTags.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch tags';
+      });
+  },
 });
 
 export const { addTag, removeTag, updateTag } = tagSlice.actions;
 export default tagSlice.reducer;
-
