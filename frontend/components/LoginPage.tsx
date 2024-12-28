@@ -1,34 +1,17 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { updateAccount } from '@/store/slices/accountSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { login } from '@/store/slices/authSlice';
+import { RootState } from '@/store/store';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // This is a mock login. In a real application, you would validate credentials against a backend.
-    if (email === 'admin@example.com' && password === 'admin') {
-      dispatch(updateAccount({
-        id: 'user-1',
-        name: 'Admin User',
-        email: email,
-        role: 'admin',
-        permittedProjects: ['1'], // This should be fetched from the backend in a real app
-      }));
-    } else if (email === 'user@example.com' && password === 'admin') {
-      dispatch(updateAccount({
-        id: 'user-2',
-        name: 'Regular User',
-        email: email,
-        role: 'user',
-        permittedProjects: ['1'], // This should be fetched from the backend in a real app
-      }));
-    } else {
-      alert('Invalid credentials');
-    }
+    dispatch(login(username, password));
   };
 
   return (
@@ -37,14 +20,14 @@ const LoginPage: React.FC = () => {
         <h1 className="text-3xl font-bold mb-6 text-center">Login to Atomation</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-base-content">
-              Email
+            <label htmlFor="username" className="block text-sm font-medium text-base-content">
+              Username
             </label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="mt-1 block w-full input input-bordered"
               required
             />
@@ -62,15 +45,11 @@ const LoginPage: React.FC = () => {
               required
             />
           </div>
-          <button type="submit" className="w-full btn btn-primary">
-            Log in
+          {error && <p className="text-error">{error}</p>}
+          <button type="submit" className="w-full btn btn-primary" disabled={loading}>
+            {loading ? 'Logging in...' : 'Log in'}
           </button>
         </form>
-        <div className="mt-4 text-sm text-center">
-          <p>Use these credentials for testing:</p>
-          <p>Admin: admin@example.com / password</p>
-          <p>User: user@example.com / password</p>
-        </div>
       </div>
     </div>
   );

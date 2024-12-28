@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { FolderIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2, PlusIcon, CircleDot, Circle, CheckCircle } from 'lucide-react';
 import { RootState, AppDispatch } from '../store/store';
-import { setSelectedMilestone } from '@/store/slices/project';
+import { setSelectedMilestone, fetchProjects } from '@/store/slices/project';
 import { setTasks } from '@/store/slices/kanban';
 import LogViewer from './LogViewer';
 import LogModal from './LogModal';
@@ -13,18 +13,11 @@ import { UserRole } from '@/store/slices/accountSlice';
 import ProjectPermissionsModal from './ProjectPermissionsModal';
 
 const ProjectList: React.FC = () => {
-  const projects = useSelector((state: RootState) => {
-    if (state.account.role === 'owner' || state.account.role === 'admin') {
-      return state.projects.projects;
-    }
-    return state.projects.projects.filter(project =>
-      state.account.permittedProjects.includes(project.id)
-    );
-  });
+  const dispatch = useDispatch<AppDispatch>();
+  const projects = useSelector((state: RootState) => state.projects.projects);
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
   const userRole = useSelector((state: RootState) => state.account.role);
   const account = useSelector((state: RootState) => state.account);
-  const dispatch = useDispatch<AppDispatch>();
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -37,6 +30,9 @@ const ProjectList: React.FC = () => {
   const [selectedMilestoneForTask, setSelectedMilestoneForTask] = useState<string | null>(null);
   const [selectedProjectForTask, setSelectedProjectForTask] = useState<string | null>(null);
 
+  useEffect(() => {
+    dispatch(fetchProjects());
+  }, [dispatch]);
 
   const toggleProjectExpansion = (projectId: string) => {
     setExpandedProjects(prev => {

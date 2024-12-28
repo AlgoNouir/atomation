@@ -1,4 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { RootState } from '../store';
 
 interface ChecklistItem {
     id: string;
@@ -56,6 +58,8 @@ interface Project {
 interface ProjectState {
     projects: Project[];
     selectedMilestone: string | null;
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    error: string | null;
 }
 
 const initialState: ProjectState = {
@@ -167,7 +171,22 @@ const initialState: ProjectState = {
         },
     ],
     selectedMilestone: '1-1',
+    status: 'idle',
+    error: null,
 };
+
+export const fetchProjects = createAsyncThunk(
+    'projects/fetchProjects',
+    async (_, { getState }) => {
+        const { auth } = getState() as RootState;
+        const response = await axios.get('http://localhost:8000/api/projects/', {
+            headers: {
+                Authorization: `Bearer ${auth.token}`,
+            },
+        });
+        return response.data;
+    }
+);
 
 const projectSlice = createSlice({
     name: 'projects',
@@ -223,6 +242,20 @@ const projectSlice = createSlice({
                 milestone.tasks.push(task);
             }
         },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchProjects.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchProjects.fulfilled, (state, action: PayloadAction<Project[]>) => {
+                state.status = 'succeeded';
+                state.projects = action.payload;
+            })
+            .addCase(fetchProjects.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
+            });
     },
 });
 
