@@ -241,13 +241,17 @@ class TaskDetailAPIView(APIView):
                 ChecklistItem.objects.create(task=task, **item_data)
 
             # Log the task update
-            log_message = f"Task '{task.title}' updated by {request.user.username}"
-            if old_task_data['status'] != task.status:
-                log_message += f" - Status changed from '{old_task_data['status']}' to '{task.status}'"
+            log_message = f"{task} change status to {task.status}"
+            if old_task_data['description'] != task.description:
+                log_message = task.description
+                if request.user != task.assignee:
+                    log_message += f"\nUser {request.user.get_full_name()} assigned the task to user {task.assignee.get_full_name()}"
+            
             Log.objects.create(
                 project=task.milestone.project,
                 user=request.user,
-                message=log_message
+                message=log_message,
+                task=task,
             )
 
             return Response(TaskSerializer(task).data)
@@ -306,20 +310,19 @@ class TagAPIView(APIView):
 class LogAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, project_pk):
-        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
-        logs = project.logs.all().order_by('-timestamp')
-        serializer = LogSerializer(logs, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, project_pk):
-        project = get_object_or_404(Project, pk=project_pk, permissions__user=request.user)
+    def post(self, request, project_pk=None):
+        print(request.data)
+        project = get_object_or_404(Project, pk=project_pk)
         serializer = LogSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(project=project, user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, project_pk=None):
+        logs = Log.objects.filter(project_id=project_pk)
+        serializer = LogSerializer(logs, many=True)
+        return Response(serializer.data)
 
 
 

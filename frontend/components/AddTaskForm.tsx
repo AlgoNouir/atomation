@@ -11,7 +11,6 @@ interface AddTaskFormProps {
 }
 
 interface ChecklistItem {
-  id?: string;
   text: string;
   isCompleted: boolean;
 }
@@ -29,9 +28,11 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
   const [start_date, setStart_date] = useState('');
   const [due_date, setDue_date] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (tagStatus === 'idle') {
@@ -41,27 +42,37 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
     if (title.trim() && start_date && due_date && deadline) {
-      await dispatch(createTask({
-        milestoneId,
-        task: {
-          title,
-          description,
-          status,
-          assignee: assignee || null,
-          start_date,
-          due_date,
-          deadline,
-          tags: selectedTags,
-          checklist,
-          comments: [],
-          dependencies: [],
-          attachments: [],
-        }
-      }));
-      onClose();
+      try {
+        await dispatch(createTask({
+          milestoneId,
+          task: {
+            title,
+            description,
+            status,
+            assignee: assignee || null,
+            start_date,
+            due_date,
+            deadline,
+            tags: selectedTags,
+            checklist,
+            comments: [],
+            dependencies: [],
+            attachments: [],
+          }
+        })).unwrap();
+        onClose();
+      } catch (err) {
+        setError('Failed to create task. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
-      alert("Please fill in all required fields");
+      setError("Please fill in all required fields");
+      setIsSubmitting(false);
     }
   };
 
@@ -236,9 +247,14 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
           </div>
         </div>
       </div>
+      {error && (
+        <div className="text-error">{error}</div>
+      )}
       <div className="modal-action">
         <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-        <button type="submit" className="btn btn-primary">Add Task</button>
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? 'Adding Task...' : 'Add Task'}
+        </button>
       </div>
     </form>
   );

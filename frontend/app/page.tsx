@@ -51,18 +51,6 @@ export default function KanbanPage() {
                   <nav className="text-sm leading-6 font-semibold text-base-content">
                     <ul className="flex space-x-8">
                       <li>
-                        <a className="hover:text-primary" href="#boards">Boards</a>
-                      </li>
-                      <li>
-                        <a className="hover:text-primary" href="#teams">Teams</a>
-                      </li>
-                      <li>
-                        <button className="hover:text-primary flex items-center space-x-1" onClick={() => setIsSettingsOpen(true)}>
-                          <Settings size={16} />
-                          <span>Settings</span>
-                        </button>
-                      </li>
-                      <li>
                         <button className="hover:text-primary flex items-center space-x-1" onClick={() => setIsTeamModalOpen(true)}>
                           <Users size={16} />
                           <span>{auth.role === 'owner' ? 'Team Stats' : 'Your Stats'}</span>
