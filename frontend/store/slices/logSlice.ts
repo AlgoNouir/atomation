@@ -114,7 +114,7 @@ export const { addLog, clearLogs } = logSlice.actions;
 export default logSlice.reducer;
 
 export const selectPermittedLogs = (state: RootState) => {
-    const { role, id, permittedProjects } = state.account;
+    const { role, id, permittedProjects } = state.auth;
     const allLogs = state.log.entries;
 
     if (role === 'owner') {

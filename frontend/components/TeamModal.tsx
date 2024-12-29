@@ -14,7 +14,7 @@ const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
   const users = useSelector((state: RootState) => state.users.users);
   const projects = useSelector((state: RootState) => state.projects.projects);
   const logs = useSelector((state: RootState) => state.log.entries);
-  const currentUser = useSelector((state: RootState) => state.account);
+  const currentUser = useSelector((state: RootState) => state.auth);
 
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 

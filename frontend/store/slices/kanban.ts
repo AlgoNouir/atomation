@@ -114,7 +114,7 @@ export const { moveTask, setTasks, updateTaskStatus, updateTaskChecklist } = kan
 export const updateTaskStatusAndLog = (taskId: string, newStatus: string, projectId: string) => (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const task = state.kanban.tasks.find((t: Task) => t.id === taskId);
-    const currentUser = state.account.name;
+    const currentUser = state.auth.name;
     if (task && task.status !== newStatus) {
         const oldStatus = task.status;
         dispatch(updateTaskStatus({ taskId, newStatus }));
@@ -129,7 +129,7 @@ export const updateTaskStatusAndLog = (taskId: string, newStatus: string, projec
 export const updateTaskChecklistAndLog = (taskId: string, updatedChecklist: ChecklistItem[], projectId: string) => (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const task = state.kanban.tasks.find((t: Task) => t.id === taskId);
-    const currentUser = state.account.name;
+    const currentUser = state.auth.name;
     if (task) {
         dispatch(updateTaskChecklist({ taskId, updatedChecklist }));
         updatedChecklist.forEach(item => {

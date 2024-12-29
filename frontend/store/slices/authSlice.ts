@@ -6,24 +6,36 @@ import { fetchLogs } from './logSlice';
 import { fetchTags } from './tagSlice';
 import { fetchProjectUsers } from './userSlice';
 
+export type UserRole = 'user' | 'admin' | 'owner';
+
 interface AuthState {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    role: UserRole;
+    permittedProjects: string[];
     token: string | null;
     isAuthenticated: boolean;
     loading: boolean;
     error: string | null;
     redirectToPanel: boolean;
     activityLoading: boolean;
-    role: 'owner' | 'admin' | 'user' | null;
 }
 
 const initialState: AuthState = {
+    id: '',
+    name: '',
+    email: '',
+    avatar: undefined,
+    role: 'user',
+    permittedProjects: [],
     token: localStorage.getItem('token'),
     isAuthenticated: false,
     loading: false,
     error: null,
     redirectToPanel: false,
     activityLoading: false,
-    role: null,
 };
 
 const authSlice = createSlice({
@@ -34,9 +46,14 @@ const authSlice = createSlice({
             state.loading = true;
             state.error = null;
         },
-        loginSuccess: (state, action: PayloadAction<{ token: string; role: 'owner' | 'admin' | 'user' }>) => {
+        loginSuccess: (state, action: PayloadAction<{ token: string; user: Omit<AuthState, 'token' | 'isAuthenticated' | 'loading' | 'error' | 'redirectToPanel' | 'activityLoading'> }>) => {
             state.token = action.payload.token;
-            state.role = action.payload.role;
+            state.id = action.payload.user.id;
+            state.name = action.payload.user.name;
+            state.email = action.payload.user.email;
+            state.avatar = action.payload.user.avatar;
+            state.role = action.payload.user.role;
+            state.permittedProjects = action.payload.user.permittedProjects;
             state.isAuthenticated = true;
             state.loading = false;
             state.error = null;
@@ -49,12 +66,7 @@ const authSlice = createSlice({
             state.error = action.payload;
         },
         logout: (state) => {
-            state.token = null;
-            state.isAuthenticated = false;
-            state.loading = false;
-            state.error = null;
-            state.redirectToPanel = false;
-            state.role = null;
+            return { ...initialState, token: null };
         },
         setRedirectToPanel: (state) => {
             state.redirectToPanel = true;
@@ -62,20 +74,33 @@ const authSlice = createSlice({
         activityFetchComplete: (state) => {
             state.activityLoading = false;
         },
+        updateAccount: (state, action: PayloadAction<Partial<AuthState>>) => {
+            return { ...state, ...action.payload };
+        },
+        setPermittedProjects: (state, action: PayloadAction<string[]>) => {
+            state.permittedProjects = action.payload;
+        },
     },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, setRedirectToPanel, activityFetchComplete } = authSlice.actions;
+export const {
+    loginStart,
+    loginSuccess,
+    loginFailure,
+    logout,
+    setRedirectToPanel,
+    activityFetchComplete,
+    updateAccount,
+    setPermittedProjects,
+} = authSlice.actions;
 
 export const login = (username: string, password: string): AppThunk => async (dispatch) => {
     try {
         dispatch(loginStart());
         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/token/`, { username, password });
-        const { access: token, role } = response.data;
-        console.log(role);
-
+        const { access: token, ...userData } = response.data;
         localStorage.setItem('token', token);
-        dispatch(loginSuccess({ token, role }));
+        dispatch(loginSuccess({ token, user: userData }));
 
         // Fetch initial data
         await Promise.all([

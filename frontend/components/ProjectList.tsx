@@ -21,8 +21,7 @@ const ProjectList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const projects = useSelector((state: RootState) => state.projects.projects);
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
-  const userRole = useSelector((state: RootState) => state.account.role);
-  const account = useSelector((state: RootState) => state.account);
+  const { role: userRole, id: currentUserId } = useSelector((state: RootState) => state.auth);
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -127,7 +126,7 @@ const ProjectList: React.FC = () => {
                             <CheckCircle2 size={16} className={selectedMilestone === milestone.id ? 'text-primary-content' : 'text-primary'} />
                             <span>{milestone.name}</span>
                           </div>
-                          {(userRole === 'admin' || userRole === 'owner' || project.permissions.find(p => p.userId === account.id)?.role === 'editor') && (
+                          {(userRole === 'admin' || userRole === 'owner' || project.permissions.find(p => p.userId === currentUserId)?.role === 'editor') && (
                             <button
                               className="btn btn-xs btn-ghost"
                               onClick={(e) => {

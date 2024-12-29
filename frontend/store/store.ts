@@ -4,7 +4,6 @@ import projectReducer from './slices/project';
 import logReducer from './slices/logSlice';
 import userReducer from './slices/userSlice';
 import tagReducer from './slices/tagSlice';
-import accountReducer from './slices/accountSlice';
 import authReducer from './slices/authSlice';
 import { ThunkAction } from 'redux-thunk';
 import { Action } from '@reduxjs/toolkit';
@@ -16,7 +15,6 @@ export const store = configureStore({
         log: logReducer,
         users: userReducer,
         tags: tagReducer,
-        account: accountReducer,
         auth: authReducer,
     },
 });

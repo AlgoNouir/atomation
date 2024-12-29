@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { moveTask, updateTaskStatusAndLog } from '@/store/slices/kanban';
-import { updateTaskThunk, selectPermittedTasks } from '@/store/slices/project';
+import { updateTask, selectPermittedTasks } from '@/store/slices/project';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import TaskModal from './TaskModal';
@@ -20,8 +20,7 @@ const KanbanBoard: React.FC = () => {
     const [isDependencyModalOpen, setIsDependencyModalOpen] = useState(false);
     const users = useSelector((state: RootState) => state.users.users);
     const tags = useSelector((state: RootState) => state.tags.tags);
-    const userRole = useSelector((state: RootState) => state.account.role);
-    const currentUser = useSelector((state: RootState) => state.account);
+    const { role: userRole, id: currentUserId } = useSelector((state: RootState) => state.auth);
     const permittedTasks = useSelector(selectPermittedTasks);
 
     const tasks = useSelector((state: RootState) => state.kanban.tasks);
@@ -60,7 +59,7 @@ const KanbanBoard: React.FC = () => {
 
             if (selectedMilestone) {
                 dispatch(
-                    updateTaskThunk({
+                    updateTask({
                         milestoneId: selectedMilestone,
                         taskId: draggableId,
                         updates: { status: destinationColumn.title },
@@ -113,7 +112,7 @@ const KanbanBoard: React.FC = () => {
         return <div className="text-center py-8">Project not found.</div>;
     }
 
-    const userPermission = project.permissions.find(p => p.userId === currentUser.id);
+    const userPermission = project.permissions.find(p => p.userId === currentUserId);
     if (!userPermission && userRole !== 'owner') {
         return <div className="text-center py-8">You don't have permission to view this project.</div>;
     }

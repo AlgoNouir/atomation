@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
-import { updateAccount } from '@/store/slices/accountSlice';
+import { updateAccount } from '@/store/slices/authSlice';
 import { X } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -11,9 +11,9 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const account = useSelector((state: RootState) => state.account);
-  const [name, setName] = useState(account.name);
-  const [email, setEmail] = useState(account.email);
+  const auth = useSelector((state: RootState) => state.auth);
+  const [name, setName] = useState(auth.name);
+  const [email, setEmail] = useState(auth.email);
 
   const handleSave = () => {
     dispatch(updateAccount({ name, email }));
@@ -60,7 +60,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <label className="block text-sm font-medium text-base-content">
               Role
             </label>
-            <p className="mt-1 text-base-content/70 capitalize">{account.role}</p>
+            <p className="mt-1 text-base-content/70 capitalize">{auth.role}</p>
           </div>
         </div>
         <div className="flex justify-end p-4 border-t border-base-300">

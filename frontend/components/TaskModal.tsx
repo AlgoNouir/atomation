@@ -23,7 +23,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
     const users = useSelector((state: RootState) => state.users.users);
     const tags = useSelector((state: RootState) => state.tags.tags);
-    const userRole = useSelector((state: RootState) => state.account.role);
+    const userRole = useSelector((state: RootState) => state.auth.role);
     const logs = useSelector((state: RootState) => state.log.entries);
 
     const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
@@ -193,7 +193,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     className="textarea textarea-bordered w-full h-32"
                                     value={localTask.description}
                                     onChange={(e) => handleInputChange('description', e.target.value)}
-                                    readOnly={userRole === 'user'}
                                 ></textarea>
                             </div>
                             <div className="space-y-4">
@@ -205,7 +204,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         className="select select-bordered w-full"
                                         value={localTask.status}
                                         onChange={(e) => handleInputChange('status', e.target.value)}
-                                        disabled={userRole === 'user'}
                                     >
                                         <option value="To Do">To Do</option>
                                         <option value="In Progress">In Progress</option>
@@ -288,7 +286,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         }
                                     }}
                                     value=""
-                                    disabled={userRole === 'user'}
                                 >
                                     <option value="" disabled>Add a tag</option>
                                     {tags.filter(tag => !localTask.tags.includes(tag.id)).map(tag => (
@@ -304,7 +301,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     className="select select-bordered w-full"
                                     value={localTask.assignee || ''}
                                     onChange={(e) => handleInputChange('assignee', e.target.value || null)}
-                                    disabled={userRole === 'user'}
                                 >
                                     <option value="">Unassigned</option>
                                     {users.map(user => (
@@ -325,7 +321,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                             checked={item.isCompleted}
                                             onChange={() => toggleChecklistItem(item.id)}
                                             className="checkbox"
-                                            disabled={userRole === 'user'}
                                         />
                                         <span className={item.isCompleted ? 'line-through' : ''}>{item.text}</span>
                                     </li>
@@ -366,7 +361,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     placeholder="Add a comment"
-                                    disabled={userRole === 'user'}
                                 />
                                 {(userRole === 'admin' || userRole === 'owner') && (
                                     <button className="btn btn-primary btn-square" onClick={addComment}>
@@ -400,15 +394,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                     )}
                 </div>
                 <div className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
-                    {(userRole === 'admin' || userRole === 'owner') && (
-                        <button
-                            onClick={handleSave}
-                            className={`btn btn-primary ${isSaving ? 'loading' : ''}`}
-                            disabled={isSaving}
-                        >
-                            {isSaving ? 'Saving...' : 'Save Changes'}
-                        </button>
-                    )}
+                    <button
+                        onClick={handleSave}
+                        className={`btn btn-primary ${isSaving ? 'loading' : ''}`}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
                 </div>
                 {saveError && (
                     <div className="text-error text-center mt-2">

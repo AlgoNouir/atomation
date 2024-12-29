@@ -15,7 +15,7 @@ export default function KanbanPage() {
   const [theme, setTheme] = useState('light');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-  const account = useSelector((state: RootState) => state.account);
+  const auth = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function KanbanPage() {
                       <li>
                         <button className="hover:text-primary flex items-center space-x-1" onClick={() => setIsTeamModalOpen(true)}>
                           <Users size={16} />
-                          <span>{account.role === 'owner' ? 'Team Stats' : 'Your Stats'}</span>
+                          <span>{auth.role === 'owner' ? 'Team Stats' : 'Your Stats'}</span>
                         </button>
                       </li>
                     </ul>
@@ -78,9 +78,9 @@ export default function KanbanPage() {
                       {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                     </button>
                     <div className="ml-4 flex items-center">
-                      <span className="text-sm font-medium text-base-content mr-2">{account.name}</span>
+                      <span className="text-sm font-medium text-base-content mr-2">{auth.name}</span>
                       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content">
-                        {account.name.charAt(0)}
+                        {auth.name?.charAt(0)}
                       </div>
                     </div>
                     <button

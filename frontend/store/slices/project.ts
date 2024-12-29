@@ -284,7 +284,7 @@ const hasMilestones = (project: any): project is Project & { milestones: Milesto
 };
 
 export const selectPermittedTasks = (state: RootState) => {
-    const { role, id, permittedProjects } = state.account;
+    const { role, id, permittedProjects } = state.auth;
     const allProjects = state.projects.projects;
 
     if (role === 'owner' || role === 'admin') {
@@ -294,7 +294,7 @@ export const selectPermittedTasks = (state: RootState) => {
     }
 
     return allProjects
-        .filter(p => permittedProjects.includes(p.id))
+        .filter(p => (permittedProjects || []).includes(p.id))
         .filter(hasMilestones)
         .flatMap(p => p.milestones?.flatMap(m => m.tasks || []) || [])
         .filter(task => task.assignee === id);
