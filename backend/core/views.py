@@ -26,16 +26,7 @@ class ProjectUsersAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        if user.is_superuser:
-            users = User.objects.all()
-        else:
-            project_ids = Project.objects.filter(permissions__user=user).values_list('id', flat=True)
-            users = User.objects.filter(
-                Q(projectpermission__project__in=project_ids) | 
-                Q(owned_projects__in=project_ids)
-            ).distinct()
-        
+        users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 

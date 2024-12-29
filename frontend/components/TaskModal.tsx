@@ -4,9 +4,6 @@ import { RootState, AppDispatch } from '../store/store';
 import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon, RefreshCw } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
 import { updateTaskStatusAndLog, updateTaskChecklistAndLog } from '@/store/slices/kanban';
-import { User } from '@/store/slices/userSlice';
-import { Tag } from '@/store/slices/tagSlice';
-import { UserRole } from '@/store/slices/accountSlice';
 import { format, isValid } from 'date-fns';
 import { unwrapResult } from '@reduxjs/toolkit';
 import axios from 'axios';
@@ -36,6 +33,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [isLogsLoading, setIsLogsLoading] = useState(false);
+
+    console.log(users);
+
 
     useEffect(() => {
         if (selectedMilestone) {
@@ -193,6 +193,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     className="textarea textarea-bordered w-full h-32"
                                     value={localTask.description}
                                     onChange={(e) => handleInputChange('description', e.target.value)}
+                                    readOnly={userRole === 'user'}
                                 ></textarea>
                             </div>
                             <div className="space-y-4">
@@ -204,6 +205,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         className="select select-bordered w-full"
                                         value={localTask.status}
                                         onChange={(e) => handleInputChange('status', e.target.value)}
+
                                     >
                                         <option value="To Do">To Do</option>
                                         <option value="In Progress">In Progress</option>
@@ -286,6 +288,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         }
                                     }}
                                     value=""
+
                                 >
                                     <option value="" disabled>Add a tag</option>
                                     {tags.filter(tag => !localTask.tags.includes(tag.id)).map(tag => (
@@ -301,6 +304,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     className="select select-bordered w-full"
                                     value={localTask.assignee || ''}
                                     onChange={(e) => handleInputChange('assignee', e.target.value || null)}
+
                                 >
                                     <option value="">Unassigned</option>
                                     {users.map(user => (
@@ -321,6 +325,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                             checked={item.isCompleted}
                                             onChange={() => toggleChecklistItem(item.id)}
                                             className="checkbox"
+
                                         />
                                         <span className={item.isCompleted ? 'line-through' : ''}>{item.text}</span>
                                     </li>
@@ -361,6 +366,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     placeholder="Add a comment"
+
                                 />
                                 {(userRole === 'admin' || userRole === 'owner') && (
                                     <button className="btn btn-primary btn-square" onClick={addComment}>
