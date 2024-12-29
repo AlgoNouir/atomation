@@ -25,12 +25,10 @@ interface Task {
     id: string;
     title: string;
     description: string;
-    tags: number[]; // Updated: tags are now numbers
-    startDate: string;
-    dueDate: string;
-    deadline: string;
+    tags: number[];
     start_date: string;
     due_date: string;
+    deadline: string;
     checklist: ChecklistItem[];
     assignee: string | null;
     attachments: string[];
@@ -146,6 +144,27 @@ export const createTask = createAsyncThunk(
     }
 );
 
+export const updateTaskThunk = createAsyncThunk(
+    'projects/updateTask',
+    async ({ milestoneId, taskId, updates }: { milestoneId: string; taskId: string; updates: Partial<Task> }, { getState }) => {
+        const { auth } = getState() as RootState;
+        const response = await axios.put(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/`,
+            {
+                ...updates,
+                start_date: updates.start_date,
+                due_date: updates.due_date,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${auth.token}`,
+                },
+            }
+        );
+        return { milestoneId, taskId, updatedTask: response.data };
+    }
+);
+
 const projectSlice = createSlice({
     name: 'projects',
     initialState,
@@ -239,6 +258,19 @@ const projectSlice = createSlice({
                     .find(m => m.id === milestoneId);
                 if (milestone) {
                     milestone.tasks.push(task);
+                }
+            })
+            .addCase(updateTaskThunk.fulfilled, (state, action) => {
+                const { milestoneId, taskId, updatedTask } = action.payload;
+                const project = state.projects.find(p => p.milestones.some(m => m.id === milestoneId));
+                if (project) {
+                    const milestone = project.milestones.find(m => m.id === milestoneId);
+                    if (milestone) {
+                        const taskIndex = milestone.tasks.findIndex(t => t.id === taskId);
+                        if (taskIndex !== -1) {
+                            milestone.tasks[taskIndex] = updatedTask;
+                        }
+                    }
                 }
             });
     },

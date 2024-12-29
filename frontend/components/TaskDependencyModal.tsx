@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
-import { updateTask } from '@/store/slices/project';
+import { updateTaskThunk } from '@/store/slices/project';
 import { X } from 'lucide-react';
 
 interface TaskDependencyModalProps {
@@ -33,7 +33,7 @@ const TaskDependencyModal: React.FC<TaskDependencyModalProps> = ({ isOpen, onClo
         type: dependencyType
       };
       const updatedDependencies = [...currentTask.dependencies, newDependency];
-      dispatch(updateTask({
+      dispatch(updateTaskThunk({
         milestoneId,
         taskId,
         updates: { dependencies: updatedDependencies }
@@ -44,7 +44,7 @@ const TaskDependencyModal: React.FC<TaskDependencyModalProps> = ({ isOpen, onClo
 
   const handleRemoveDependency = (dependencyId: string) => {
     const updatedDependencies = currentTask.dependencies.filter(d => d.to !== dependencyId);
-    dispatch(updateTask({
+    dispatch(updateTaskThunk({
       milestoneId,
       taskId,
       updates: { dependencies: updatedDependencies }

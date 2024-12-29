@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { moveTask, updateTaskStatusAndLog } from '@/store/slices/kanban';
-import { updateTask, selectPermittedTasks } from '@/store/slices/project';
+import { updateTaskThunk, selectPermittedTasks } from '@/store/slices/project';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import TaskModal from './TaskModal';
@@ -60,7 +60,7 @@ const KanbanBoard: React.FC = () => {
 
             if (selectedMilestone) {
                 dispatch(
-                    updateTask({
+                    updateTaskThunk({
                         milestoneId: selectedMilestone,
                         taskId: draggableId,
                         updates: { status: destinationColumn.title },

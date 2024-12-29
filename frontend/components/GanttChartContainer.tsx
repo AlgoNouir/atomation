@@ -3,7 +3,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import GanttChart from './GanttChart';
 import { RootState, AppDispatch } from '../store/store';
-import { updateTask } from '@/store/slices/project';
+import { updateTaskThunk } from '@/store/slices/project';
 import { Task } from '@/types/gantt';
 
 interface GanttChartContainerProps {
@@ -22,7 +22,7 @@ const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
 
   const handleTaskUpdate = (updatedTask: Task) => {
     if (selectedMilestone) {
-      dispatch(updateTask({
+      dispatch(updateTaskThunk({
         milestoneId: selectedMilestone,
         taskId: updatedTask.id,
         updates: {

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from .models import Project, ProjectPermission, Milestone, Task, ChecklistItem, Comment, Dependency, Tag, TaskTag, Log
@@ -16,6 +16,7 @@ from .serializers import (
     TagSerializer, 
     LogSerializer
 )
+from django.db.models import Q
 
 
 class UserAPIView(APIView):
@@ -181,8 +182,6 @@ class TaskAPIView(APIView):
         return Response(serializer.data)
 
     def post(self, request, milestone_pk):
-
-        print(request.data)
         milestone = get_object_or_404(Milestone, pk=milestone_pk, project__permissions__user=request.user)
         permission = milestone.project.permissions.get(user=request.user)
         if permission.role not in ['admin', 'editor']:
@@ -203,16 +202,7 @@ class TaskAPIView(APIView):
         except Exception as e:
             print(e)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
-    def put(self, request, pk):
-        task = Task.objects.get(pk=pk)
-        serializer = TaskSerializer(task, data=request.data)
-        if serializer.is_valid():
-            updated_task = serializer.save()
-            return Response(TaskSerializer(updated_task).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        
 class TaskDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -227,10 +217,28 @@ class TaskDetailAPIView(APIView):
         if permission.role not in ['admin', 'editor']:
             return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = TaskSerializer(task, data=request.data)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            old_task_data = TaskSerializer(task).data
+            task = serializer.save()
+
+            # Update checklist items
+            checklist_data = request.data.get('checklist', [])
+            task.checklist.all().delete()  # Delete existing checklist items
+            for item_data in checklist_data:
+                ChecklistItem.objects.create(task=task, **item_data)
+
+            # Log the task update
+            log_message = f"Task '{task.title}' updated by {request.user.username}"
+            if old_task_data['status'] != task.status:
+                log_message += f" - Status changed from '{old_task_data['status']}' to '{task.status}'"
+            Log.objects.create(
+                project=task.milestone.project,
+                user=request.user,
+                message=log_message
+            )
+
+            return Response(TaskSerializer(task).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
@@ -304,7 +312,7 @@ class LogAPIView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated, AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -314,4 +322,28 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class MilestoneLogAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, milestone_pk):
+        milestone = get_object_or_404(Milestone, pk=milestone_pk, project__permissions__user=request.user)
+        logs = Log.objects.filter(project=milestone.project).order_by('-timestamp')
+        serializer = LogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+class AllLogsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if user.is_superuser:
+            logs = Log.objects.all().order_by('-timestamp')
+        else:
+            logs = Log.objects.filter(
+                Q(project__permissions__user=user) | Q(user=user)
+            ).distinct().order_by('-timestamp')
+        serializer = LogSerializer(logs, many=True)
+        return Response(serializer.data)
 

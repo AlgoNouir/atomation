@@ -12,6 +12,8 @@ from .views import (
     CommentAPIView,
     TagAPIView,
     LogAPIView,
+    MilestoneLogAPIView,
+    AllLogsAPIView
 )
 
 urlpatterns = [
@@ -26,6 +28,7 @@ urlpatterns = [
     
     # Milestone endpoints
     path('projects/<int:project_pk>/milestones/', MilestoneAPIView.as_view(), name='milestone-list'),
+    path('milestones/<int:milestone_pk>/logs/', MilestoneLogAPIView.as_view(), name='milestone-logs'),
     
     # Task endpoints
     path('milestones/<int:milestone_pk>/tasks/', TaskAPIView.as_view(), name='task-list'),
@@ -42,4 +45,5 @@ urlpatterns = [
     
     # Log endpoints
     path('projects/<int:project_pk>/logs/', LogAPIView.as_view(), name='log-list'),
+    path('logs/', AllLogsAPIView.as_view(), name='all-logs'),
 ]

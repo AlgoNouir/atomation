@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
-import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon } from 'lucide-react';
+import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon, RefreshCw } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
 import { updateTaskStatusAndLog, updateTaskChecklistAndLog } from '@/store/slices/kanban';
 import { User } from '@/store/slices/userSlice';
 import { Tag } from '@/store/slices/tagSlice';
 import { UserRole } from '@/store/slices/accountSlice';
 import { format, isValid } from 'date-fns';
+import { unwrapResult } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { fetchMilestoneLogs } from '@/store/slices/logSlice';
 
 interface TaskModalProps {
     taskId: string;
@@ -21,6 +24,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const users = useSelector((state: RootState) => state.users.users);
     const tags = useSelector((state: RootState) => state.tags.tags);
     const userRole = useSelector((state: RootState) => state.account.role);
+    const logs = useSelector((state: RootState) => state.log.entries);
 
     const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     const task = milestone?.tasks.find(t => t.id === taskId);
@@ -29,11 +33,22 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const [newComment, setNewComment] = useState('');
     const [newChecklistItem, setNewChecklistItem] = useState('');
     const [activeTab, setActiveTab] = useState('details');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [isLogsLoading, setIsLogsLoading] = useState(false);
+
+    useEffect(() => {
+        if (selectedMilestone) {
+            setIsLogsLoading(true);
+            dispatch(fetchMilestoneLogs(selectedMilestone))
+                .finally(() => setIsLogsLoading(false));
+        }
+    }, [dispatch, selectedMilestone]);
 
     if (!task || !localTask) return null;
 
     const handleInputChange = (field: string, value: any) => {
-        if (field === 'startDate' || field === 'dueDate' || field === 'deadline') {
+        if (field === 'start_date' || field === 'due_date' || field === 'deadline') {
             setLocalTask({ ...localTask, [field]: new Date(value).toISOString() });
         } else {
             setLocalTask({ ...localTask, [field]: value });
@@ -43,22 +58,45 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
         }
     };
 
+    const handleSave = async () => {
+        if (milestone && task) {
+            setIsSaving(true);
+            setSaveError(null);
+            try {
+                const updatedTaskData = {
+                    ...localTask,
+                    start_date: localTask.start_date,
+                    due_date: localTask.due_date,
+                    checklist: localTask.checklist.map(item => ({
+                        text: item.text,
+                        is_completed: item.isCompleted
+                    }))
+                };
 
-    const handleSave = () => {
-        if (milestone) {
-            const updatedChecklist = localTask.checklist.filter(
-                (item, index) => item.isCompleted !== task.checklist[index]?.isCompleted
-            );
-            dispatch(updateTask({
-                milestoneId: milestone.id,
-                taskId: task.id,
-                updates: localTask
-            }));
-            if (updatedChecklist.length > 0) {
-                dispatch(updateTaskChecklistAndLog(task.id, localTask.checklist));
+                const response = await axios.put(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${task.id}/`,
+                    updatedTaskData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        },
+                    }
+                );
+
+                dispatch(updateTask({ milestoneId: milestone.id, taskId: task.id, updatedTask: response.data }));
+                dispatch(updateTaskChecklistAndLog(task.id, localTask.checklist, milestone.project));
+
+                // Fetch updated logs
+                dispatch(fetchMilestoneLogs(milestone.id));
+
+                onClose();
+            } catch (error) {
+                console.error('Failed to update task:', error);
+                setSaveError('Failed to save changes. Please try again.');
+            } finally {
+                setIsSaving(false);
             }
         }
-        onClose();
     };
 
     const addComment = () => {
@@ -101,6 +139,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
         });
     };
 
+    const handleRefreshLogs = () => {
+        if (selectedMilestone) {
+            setIsLogsLoading(true);
+            dispatch(fetchMilestoneLogs(selectedMilestone))
+                .finally(() => setIsLogsLoading(false));
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="relative w-full max-w-4xl bg-base-100 rounded-xl shadow-lg overflow-hidden">
@@ -129,6 +175,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                             onClick={() => setActiveTab('comments')}
                         >
                             Comments
+                        </button>
+                        <button
+                            className={`btn btn-ghost ${activeTab === 'logs' ? 'btn-active' : ''}`}
+                            onClick={() => setActiveTab('logs')}
+                        >
+                            Logs
                         </button>
                     </div>
                     {activeTab === 'details' && (
@@ -168,12 +220,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     {userRole === 'admin' || userRole === 'owner' ? (
                                         <input
                                             type="datetime-local"
-                                            value={isValid(new Date(localTask.startDate)) ? format(new Date(localTask.startDate), "yyyy-MM-dd'T'HH:mm") : ''}
-                                            onChange={(e) => handleInputChange('startDate', e.target.value)}
+                                            value={isValid(new Date(localTask.start_date)) ? format(new Date(localTask.start_date), "yyyy-MM-dd'T'HH:mm") : ''}
+                                            onChange={(e) => handleInputChange('start_date', e.target.value)}
                                             className="input input-bordered w-full"
                                         />
                                     ) : (
-                                        <p className="text-sm">{new Date(localTask.startDate).toLocaleString()}</p>
+                                        <p className="text-sm">{new Date(localTask.start_date).toLocaleString()}</p>
                                     )}
                                 </div>
                                 <div>
@@ -183,12 +235,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     {userRole === 'admin' || userRole === 'owner' ? (
                                         <input
                                             type="datetime-local"
-                                            value={isValid(new Date(localTask.dueDate)) ? format(new Date(localTask.dueDate), "yyyy-MM-dd'T'HH:mm") : ''}
-                                            onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                                            value={isValid(new Date(localTask.due_date)) ? format(new Date(localTask.due_date), "yyyy-MM-dd'T'HH:mm") : ''}
+                                            onChange={(e) => handleInputChange('due_date', e.target.value)}
                                             className="input input-bordered w-full"
                                         />
                                     ) : (
-                                        <p className="text-sm">{new Date(localTask.dueDate).toLocaleString()}</p>
+                                        <p className="text-sm">{new Date(localTask.due_date).toLocaleString()}</p>
                                     )}
                                 </div>
                                 <div>
@@ -324,14 +376,45 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                             </div>
                         </div>
                     )}
+                    {activeTab === 'logs' && (
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <h4 className="text-lg font-semibold">Logs</h4>
+                                <button
+                                    className={`btn btn-sm btn-ghost ${isLogsLoading ? 'loading' : ''}`}
+                                    onClick={handleRefreshLogs}
+                                    disabled={isLogsLoading}
+                                >
+                                    {isLogsLoading ? 'Refreshing...' : <RefreshCw size={16} />}
+                                </button>
+                            </div>
+                            <ul className="space-y-2">
+                                {logs.map((log) => (
+                                    <li key={log.id} className="bg-gray-100 p-2 rounded">
+                                        <p>{log.message}</p>
+                                        <p className="text-xs text-gray-500">{new Date(log.timestamp).toLocaleString()} by {log.person}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
                 <div className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
                     {(userRole === 'admin' || userRole === 'owner') && (
-                        <button onClick={handleSave} className="btn btn-primary">
-                            Save Changes
+                        <button
+                            onClick={handleSave}
+                            className={`btn btn-primary ${isSaving ? 'loading' : ''}`}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? 'Saving...' : 'Save Changes'}
                         </button>
                     )}
                 </div>
+                {saveError && (
+                    <div className="text-error text-center mt-2">
+                        {saveError}
+                    </div>
+                )}
             </div>
         </div>
     );

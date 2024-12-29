@@ -1,4 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { RootState } from '../store';
 
 interface LogEntry {
     id: string;
@@ -10,11 +12,57 @@ interface LogEntry {
 
 interface LogState {
     entries: LogEntry[];
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    error: string | null;
+    milestoneLogs: {
+        status: 'idle' | 'loading' | 'succeeded' | 'failed';
+        error: string | null;
+    };
 }
 
 const initialState: LogState = {
     entries: [],
+    status: 'idle',
+    error: null,
+    milestoneLogs: {
+        status: 'idle',
+        error: null,
+    },
 };
+
+export const fetchLogs = createAsyncThunk(
+    'log/fetchLogs',
+    async (projectId: string, { getState }) => {
+        const { auth } = getState() as RootState;
+        let url = `${process.env.NEXT_PUBLIC_API_URL}/api/`;
+
+        if (projectId === 'all') {
+            url += 'logs/';
+        } else {
+            url += `projects/${projectId}/logs/`;
+        }
+
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`,
+            },
+        });
+        return response.data;
+    }
+);
+
+export const fetchMilestoneLogs = createAsyncThunk(
+    'log/fetchMilestoneLogs',
+    async (milestoneId: string, { getState }) => {
+        const { auth } = getState() as RootState;
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/milestones/${milestoneId}/logs/`, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`,
+            },
+        });
+        return response.data;
+    }
+);
 
 const logSlice = createSlice({
     name: 'log',
@@ -33,6 +81,32 @@ const logSlice = createSlice({
         clearLogs: (state) => {
             state.entries = [];
         },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchLogs.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchLogs.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.entries = action.payload;
+            })
+            .addCase(fetchLogs.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message || 'Failed to fetch logs';
+            })
+            .addCase(fetchMilestoneLogs.pending, (state) => {
+                state.milestoneLogs.status = 'loading';
+                state.milestoneLogs.error = null;
+            })
+            .addCase(fetchMilestoneLogs.fulfilled, (state, action) => {
+                state.milestoneLogs.status = 'succeeded';
+                state.entries = action.payload;
+            })
+            .addCase(fetchMilestoneLogs.rejected, (state, action) => {
+                state.milestoneLogs.status = 'failed';
+                state.milestoneLogs.error = action.error.message || 'Failed to fetch milestone logs';
+            });
     },
 });
 

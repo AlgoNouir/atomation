@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppThunk } from '../store';
 import axios from 'axios';
+import { fetchProjects } from './project';
+import { fetchLogs } from './logSlice';
+import { fetchTags } from './tagSlice';
 
 interface AuthState {
     token: string | null;
@@ -8,6 +11,7 @@ interface AuthState {
     loading: boolean;
     error: string | null;
     redirectToPanel: boolean;
+    activityLoading: boolean;
 }
 
 const initialState: AuthState = {
@@ -16,6 +20,7 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     redirectToPanel: false,
+    activityLoading: false,
 };
 
 const authSlice = createSlice({
@@ -31,6 +36,7 @@ const authSlice = createSlice({
             state.isAuthenticated = true;
             state.loading = false;
             state.error = null;
+            state.activityLoading = true;
         },
         loginFailure: (state, action: PayloadAction<string>) => {
             state.token = null;
@@ -48,10 +54,13 @@ const authSlice = createSlice({
         setRedirectToPanel: (state) => {
             state.redirectToPanel = true;
         },
+        activityFetchComplete: (state) => {
+            state.activityLoading = false;
+        },
     },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, setRedirectToPanel } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout, setRedirectToPanel, activityFetchComplete } = authSlice.actions;
 
 export const login = (username: string, password: string): AppThunk => async (dispatch) => {
     try {
@@ -60,6 +69,15 @@ export const login = (username: string, password: string): AppThunk => async (di
         const token = response.data.access;
         localStorage.setItem('token', token);
         dispatch(loginSuccess(token));
+
+        // Fetch initial data
+        await Promise.all([
+            dispatch(fetchProjects()),
+            dispatch(fetchLogs('all')), // Assuming 'all' fetches logs for all projects
+            dispatch(fetchTags())
+        ]);
+
+        dispatch(activityFetchComplete());
         dispatch(setRedirectToPanel());
     } catch (error) {
         dispatch(loginFailure(error.response?.data?.detail || 'Login failed'));
