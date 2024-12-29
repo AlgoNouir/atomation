@@ -21,16 +21,20 @@ const initialState: UserState = {
   error: null,
 };
 
-export const fetchUsers = createAsyncThunk(
-  'users/fetchUsers',
+export const fetchProjectUsers = createAsyncThunk(
+  'users/fetchProjectUsers',
   async (_, { getState }) => {
     const { auth } = getState() as RootState;
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/users/`, {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/project-users/`, {
       headers: {
         Authorization: `Bearer ${auth.token}`,
       },
     });
-    return response.data;
+
+    console.log(response.data);
+
+
+    return response.data.map((d: { [key: string]: string }) => ({ ...d, name: d.get_full_name }));
   }
 );
 
@@ -53,16 +57,16 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUsers.pending, (state) => {
+      .addCase(fetchProjectUsers.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+      .addCase(fetchProjectUsers.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.users = action.payload;
       })
-      .addCase(fetchUsers.rejected, (state, action) => {
+      .addCase(fetchProjectUsers.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message || 'Failed to fetch users';
+        state.error = action.error.message || 'Failed to fetch project users';
       });
   },
 });

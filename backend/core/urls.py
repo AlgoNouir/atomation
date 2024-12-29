@@ -13,13 +13,14 @@ from .views import (
     TagAPIView,
     LogAPIView,
     MilestoneLogAPIView,
-    AllLogsAPIView
+    AllLogsAPIView,
+    ProjectUsersAPIView
 )
 
 urlpatterns = [
     # User endpoints
-    path('users/', UserAPIView.as_view(), name='user-list'),
-    path('users/<int:pk>/', UserDetailAPIView.as_view(), name='user-detail'),
+    # path('users/', UserAPIView.as_view(), name='user-list'),
+    # path('users/<int:pk>/', UserDetailAPIView.as_view(), name='user-detail'),
 
     # Project endpoints
     path('projects/', ProjectAPIView.as_view(), name='project-list'),
@@ -46,4 +47,5 @@ urlpatterns = [
     # Log endpoints
     path('projects/<int:project_pk>/logs/', LogAPIView.as_view(), name='log-list'),
     path('logs/', AllLogsAPIView.as_view(), name='all-logs'),
+    path('project-users/', ProjectUsersAPIView.as_view(), name='project-users'),
 ]

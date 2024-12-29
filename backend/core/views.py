@@ -17,6 +17,27 @@ from .serializers import (
     LogSerializer
 )
 from django.db.models import Q
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+
+class ProjectUsersAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if user.is_superuser:
+            users = User.objects.all()
+        else:
+            project_ids = Project.objects.filter(permissions__user=user).values_list('id', flat=True)
+            users = User.objects.filter(
+                Q(projectpermission__project__in=project_ids) | 
+                Q(owned_projects__in=project_ids)
+            ).distinct()
+        
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
 
 class UserAPIView(APIView):
@@ -346,4 +367,19 @@ class AllLogsAPIView(APIView):
             ).distinct().order_by('-timestamp')
         serializer = LogSerializer(logs, many=True)
         return Response(serializer.data)
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        role = 'owner' if self.user.is_superuser else 'admin' if self.user.is_staff else 'user'
+        data['role'] = role
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 

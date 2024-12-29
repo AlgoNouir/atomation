@@ -5,7 +5,9 @@ from .models import Project, ProjectPermission, Milestone, Task, ChecklistItem, 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'email', "get_full_name"]
+
+    
 
 class ProjectPermissionSerializer(serializers.ModelSerializer):
     class Meta:

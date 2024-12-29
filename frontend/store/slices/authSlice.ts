@@ -4,6 +4,7 @@ import axios from 'axios';
 import { fetchProjects } from './project';
 import { fetchLogs } from './logSlice';
 import { fetchTags } from './tagSlice';
+import { fetchProjectUsers } from './userSlice';
 
 interface AuthState {
     token: string | null;
@@ -12,6 +13,7 @@ interface AuthState {
     error: string | null;
     redirectToPanel: boolean;
     activityLoading: boolean;
+    role: 'owner' | 'admin' | 'user' | null;
 }
 
 const initialState: AuthState = {
@@ -21,6 +23,7 @@ const initialState: AuthState = {
     error: null,
     redirectToPanel: false,
     activityLoading: false,
+    role: null,
 };
 
 const authSlice = createSlice({
@@ -31,8 +34,9 @@ const authSlice = createSlice({
             state.loading = true;
             state.error = null;
         },
-        loginSuccess: (state, action: PayloadAction<string>) => {
-            state.token = action.payload;
+        loginSuccess: (state, action: PayloadAction<{ token: string; role: 'owner' | 'admin' | 'user' }>) => {
+            state.token = action.payload.token;
+            state.role = action.payload.role;
             state.isAuthenticated = true;
             state.loading = false;
             state.error = null;
@@ -50,6 +54,7 @@ const authSlice = createSlice({
             state.loading = false;
             state.error = null;
             state.redirectToPanel = false;
+            state.role = null;
         },
         setRedirectToPanel: (state) => {
             state.redirectToPanel = true;
@@ -66,15 +71,18 @@ export const login = (username: string, password: string): AppThunk => async (di
     try {
         dispatch(loginStart());
         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/token/`, { username, password });
-        const token = response.data.access;
+        const { access: token, role } = response.data;
+        console.log(role);
+
         localStorage.setItem('token', token);
-        dispatch(loginSuccess(token));
+        dispatch(loginSuccess({ token, role }));
 
         // Fetch initial data
         await Promise.all([
             dispatch(fetchProjects()),
-            dispatch(fetchLogs('all')), // Assuming 'all' fetches logs for all projects
-            dispatch(fetchTags())
+            dispatch(fetchLogs('all')),
+            dispatch(fetchTags()),
+            dispatch(fetchProjectUsers())
         ]);
 
         dispatch(activityFetchComplete());

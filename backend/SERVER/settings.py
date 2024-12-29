@@ -138,4 +138,8 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
+SIMPLE_JWT['ADDITIONAL_CLAIMS'] = {
+    'role': lambda user: 'owner' if user.is_superuser else 'admin' if user.is_staff else 'user'
+}
+
 CORS_ALLOW_ALL_ORIGINS = True  # Only for development, configure properly for production

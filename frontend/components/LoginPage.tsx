@@ -3,20 +3,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login } from '@/store/slices/authSlice';
 import { RootState } from '@/store/store';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
-  const { loading, error, isAuthenticated, redirectToPanel } = useSelector((state: RootState) => state.auth);
+  const { loading, error, isAuthenticated, redirectToPanel, activityLoading, role } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
-  console.log(isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && redirectToPanel && !activityLoading) {
       router.push('/panel');
     }
-  }, [isAuthenticated, redirectToPanel, router]);
+  }, [isAuthenticated, redirectToPanel, activityLoading, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +55,23 @@ const LoginPage: React.FC = () => {
             />
           </div>
           {error && <p className="text-error">{error}</p>}
-          <button type="submit" className="w-full btn btn-primary" disabled={loading}>
-            {loading ? 'Logging in...' : 'Log in'}
+          {isAuthenticated && role && (
+            <p className="text-success mt-2">Logged in as {role}</p>
+          )}
+          <button type="submit" className="w-full btn btn-primary" disabled={loading || activityLoading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging in...
+              </>
+            ) : activityLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Fetching data...
+              </>
+            ) : (
+              'Log in'
+            )}
           </button>
         </form>
       </div>
