@@ -89,6 +89,41 @@ yarn dev
 - `/types`: TypeScript type definitions
 - `/utils`: Utility functions and helpers
 
+## Backend
+
+The backend for Atomation is built with Django and Django REST Framework. It provides a robust API for managing projects, tasks, and user authentication.
+
+### Key Features
+
+- RESTful API endpoints for all major functionalities
+- JWT-based authentication
+- Role-based access control
+- Database models for Projects, Milestones, Tasks, and User management
+
+### Setup
+
+1. Navigate to the `backend` directory
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Set up the database:
+   ```
+   python manage.py migrate
+   ```
+4. Create a superuser:
+   ```
+   python manage.py createsuperuser
+   ```
+5. Run the development server:
+   ```
+   python manage.py runserver
+   ```
+
+The API will be available at `http://localhost:8000/api/`.
+
+For detailed API documentation, refer to the `api/views.py` and `api/urls.py` files.
+
 ## Contributing
 
 1. Fork the repository
@@ -111,3 +146,4 @@ This project is licensed under the MIT License.
 - [hello-pangea/dnd](https://github.com/hello-pangea/dnd)
 - [D3.js](https://d3js.org/)
 - [Lucide](https://lucide.dev/)
+
