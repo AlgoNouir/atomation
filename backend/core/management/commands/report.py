@@ -22,10 +22,13 @@ def connect2AI():
         txt += str(log.timestamp)
         txt += str(log)
         txt += f"message: {log.message}"
+        
+    if txt == "":
+        txt = "report for not working and empty logs"
     
     # ------------------------------------------------------------ GENERATE MODEL
     
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    genai.configure(api_key="AIzaSyAa3q723QtRtmzNHGsmCxA6UP1KM91qR6w")
 
     # Create the model
     generation_config = {
@@ -57,9 +60,8 @@ def connect2AI():
     chat_session = model.start_chat(
         history=temp_reports
     )
-
     
-    response = chat_session.send_message(txt)
+    response = chat_session.send_message(content=txt)
 
     # ------------------------------------------------------------ UPDATE REPORT
 
