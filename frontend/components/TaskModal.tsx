@@ -75,7 +75,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                 };
 
                 const response = await axiosReq.put(
-                    "/api/tasks/${task.id}/",
+                    `/api/tasks/${task.id}/`,
                     updatedTaskData,
                 );
 
