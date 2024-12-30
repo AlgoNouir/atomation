@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
+import { axiosReq } from '@/utils/axios';
 
 interface ChecklistItem {
     id: string;
@@ -71,13 +72,8 @@ const initialState: ProjectState = {
 
 export const fetchProjects = createAsyncThunk(
     'projects/fetchProjects',
-    async (_, { getState }) => {
-        const { auth } = getState() as RootState;
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/`, {
-            headers: {
-                Authorization: `Bearer ${auth.token}`,
-            },
-        });
+    async (_) => {
+        const response = await axiosReq.get("/api/projects/");
         return response.data;
     }
 );
@@ -86,14 +82,9 @@ export const createProject = createAsyncThunk(
     'projects/createProject',
     async (projectName: string, { getState }) => {
         const { auth } = getState() as RootState;
-        const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/projects/`,
+        const response = await axiosReq.post(
+            "/api/projects/",
             { name: projectName },
-            {
-                headers: {
-                    Authorization: `Bearer ${auth.token}`,
-                },
-            }
         );
         return response.data;
     }
@@ -102,15 +93,9 @@ export const createProject = createAsyncThunk(
 export const createMilestone = createAsyncThunk(
     'projects/createMilestone',
     async ({ projectId, name }: { projectId: string; name: string }, { getState }) => {
-        const { auth } = getState() as RootState;
-        const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/milestones/`,
+        const response = await axiosReq.post(
+            `/api/projects/${projectId}/milestones/`,
             { name },
-            {
-                headers: {
-                    Authorization: `Bearer ${auth.token}`,
-                },
-            }
         );
         return response.data;
     }
@@ -131,14 +116,9 @@ export const createTask = createAsyncThunk(
             checklist: task.checklist, // Include the checklist
         };
 
-        const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/milestones/${milestoneId}/tasks/`,
+        const response = await axiosReq.post(
+            `/api/milestones/${milestoneId}/tasks/`,
             formattedTask,
-            {
-                headers: {
-                    Authorization: `Bearer ${auth.token}`,
-                },
-            }
         );
         return { milestoneId, task: { ...response.data, id: String(response.data.id) } };
     }
@@ -147,19 +127,13 @@ export const createTask = createAsyncThunk(
 export const updateTaskThunk = createAsyncThunk(
     'projects/updateTask',
     async ({ milestoneId, taskId, updates }: { milestoneId: string; taskId: string; updates: Partial<Task> }, { getState }) => {
-        const { auth } = getState() as RootState;
-        const response = await axios.put(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/`,
+        const response = await axiosReq.put(
+            `/api/tasks/${taskId}/`,
             {
                 ...updates,
                 start_date: updates.start_date,
                 due_date: updates.due_date,
             },
-            {
-                headers: {
-                    Authorization: `Bearer ${auth.token}`,
-                },
-            }
         );
         return { milestoneId, taskId, updatedTask: response.data };
     }

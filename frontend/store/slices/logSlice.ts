@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
+import { axiosReq } from '@/utils/axios';
 
 interface LogEntry {
     id: string;
@@ -33,8 +34,7 @@ const initialState: LogState = {
 export const fetchLogs = createAsyncThunk(
     'log/fetchLogs',
     async (projectId: string, { getState }) => {
-        const { auth } = getState() as RootState;
-        let url = `${process.env.NEXT_PUBLIC_API_URL}/api/`;
+        let url = "/api/";
 
         if (projectId === 'all') {
             url += 'logs/';
@@ -42,11 +42,7 @@ export const fetchLogs = createAsyncThunk(
             url += `projects/${projectId}/logs/`;
         }
 
-        const response = await axios.get(url, {
-            headers: {
-                Authorization: `Bearer ${auth.token}`,
-            },
-        });
+        const response = await axiosReq.get(url);
         return response.data;
     }
 );
@@ -55,11 +51,7 @@ export const fetchMilestoneLogs = createAsyncThunk(
     'log/fetchMilestoneLogs',
     async (milestoneId: string, { getState }) => {
         const { auth } = getState() as RootState;
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/milestones/${milestoneId}/logs/`, {
-            headers: {
-                Authorization: `Bearer ${auth.token}`,
-            },
-        });
+        const response = await axiosReq.get(`/api/milestones/${milestoneId}/logs/`);
         return response.data;
     }
 );

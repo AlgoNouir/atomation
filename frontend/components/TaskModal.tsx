@@ -8,6 +8,7 @@ import { format, isValid } from 'date-fns';
 import { unwrapResult } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { fetchMilestoneLogs } from '@/store/slices/logSlice';
+import { axiosReq } from '@/utils/axios';
 
 interface TaskModalProps {
     taskId: string;
@@ -73,14 +74,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                     }))
                 };
 
-                const response = await axios.put(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${task.id}/`,
+                const response = await axiosReq.put(
+                    "/api/tasks/${task.id}/",
                     updatedTaskData,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                    }
                 );
 
                 dispatch(updateTask({ milestoneId: milestone.id, taskId: task.id, updatedTask: response.data }));

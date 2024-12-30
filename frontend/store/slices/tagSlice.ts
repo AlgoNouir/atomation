@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
+import { axiosReq } from '@/utils/axios';
 
 export interface Tag {
   id: string;
@@ -24,11 +25,7 @@ export const fetchTags = createAsyncThunk(
   'tags/fetchTags',
   async (_, { getState }) => {
     const { auth } = getState() as RootState;
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/tags/`, {
-      headers: {
-        Authorization: `Bearer ${auth.token}`,
-      },
-    });
+    const response = await axiosReq.get("/api/tags/",);
     return response.data;
   }
 );

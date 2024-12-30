@@ -5,6 +5,7 @@ import { fetchProjects } from './project';
 import { fetchLogs } from './logSlice';
 import { fetchTags } from './tagSlice';
 import { fetchProjectUsers } from './userSlice';
+import { axiosReq } from '@/utils/axios';
 
 export type UserRole = 'user' | 'admin' | 'owner';
 
@@ -97,7 +98,7 @@ export const {
 export const login = (username: string, password: string): AppThunk => async (dispatch) => {
     try {
         dispatch(loginStart());
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/token/`, { username, password });
+        const response = await axiosReq.post("/api/token/", { username, password });
         const { access: token, ...userData } = response.data;
         localStorage.setItem('token', token);
         dispatch(loginSuccess({ token, user: userData }));
@@ -119,7 +120,7 @@ export const login = (username: string, password: string): AppThunk => async (di
 
 export const logoutUser = (): AppThunk => async (dispatch) => {
     try {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/logout/`);
+        await axiosReq.post("/api/logout/");
     } catch (error) {
         console.error('Logout failed:', error);
     } finally {

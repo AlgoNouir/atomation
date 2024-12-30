@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
+import { axiosReq } from '@/utils/axios';
 
 export interface User {
   id: string;
@@ -25,11 +26,7 @@ export const fetchProjectUsers = createAsyncThunk(
   'users/fetchProjectUsers',
   async (_, { getState }) => {
     const { auth } = getState() as RootState;
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/project-users/`, {
-      headers: {
-        Authorization: `Bearer ${auth.token}`,
-      },
-    });
+    const response = await axiosReq.get("/api/project-users");
 
     console.log(response.data);
 
