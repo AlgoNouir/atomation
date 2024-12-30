@@ -6,14 +6,19 @@ from django.utils.timezone import localtime
 from time import sleep
 
 
-def getLogs(group:GroupModel, logs_list:list[str], fromTime:datetime, toTime:datetime) -> list[str]:
+def getLogs(group:GroupModel, logs_list:list[str], fromTime:datetime|None, toTime:datetime) -> list[str]:
     
     # ------------------------------------------------------------ GET LOGS
+    print(fromTime, toTime)
     
-    logs = Log.objects.filter(
-        timestamp__time__range=[fromTime, toTime],
-        project__in=group.projects.all()
-    )
+    query = {
+        "project__in": group.projects.all()
+    }
+    
+    if fromTime is not None:
+        query['timestamp__time__range'] = [fromTime, toTime],
+    
+    logs = Log.objects.filter(**query)
     
     txt = ""
     for log in logs:
