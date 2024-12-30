@@ -120,6 +120,8 @@ class GroupModel(models.Model):
     systemMainPrompt = models.TextField(max_length=100000)
     repeetHour = models.IntegerField(default=1)
     projects = models.ManyToManyField(Project, blank=True)
+    fromTime = models.DateTimeField(null=True, blank=True)
+    toTime = models.DateTimeField(null=True, blank=True)
     
     
     def __str__(self):

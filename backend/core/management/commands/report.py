@@ -103,10 +103,10 @@ class Command(BaseCommand):
         
         while True:
             
-            logs_list = []
             
             # run for each groups
             for group in GroupModel.objects.all():
+                logs_list = []
                 times = getGroupReportTime(group)
                 
                 # check for time reporting
@@ -116,8 +116,7 @@ class Command(BaseCommand):
             
                 fromTime, toTime = times
                 logs_list = getLogs(group, logs_list, fromTime, toTime)
-                
-            if len(logs_list) > 0:
+        
                 connect2AI(
                     group=group,
                     txt='-------'.join(logs_list),
