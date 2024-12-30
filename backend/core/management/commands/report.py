@@ -107,22 +107,19 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         
         
-        now = localtime().hour
-        groups = GroupModel.objects.filter(
-            fromTime__gte=now,
-            toTime__lt=now
-            
-        )
         
         
         while True:
             
-            GroupModel.objects.filter(
+            now = localtime().hour
+            groups = GroupModel.objects.filter(
+                fromTime__gte=now,
+                toTime__lt=now
                 
             )
             
             # run for each groups
-            for group in GroupModel.objects.all():
+            for group in groups:
                 logs_list = []
                 times = getGroupReportTime(group)
                 
