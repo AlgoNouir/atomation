@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from telebot import TeleBot
+from SERVER.settings import BOTFATHER_HASH
 
 class Project(models.Model):
     name = models.CharField(max_length=255)
@@ -134,4 +136,12 @@ class ReportModel(models.Model):
     def __str__(self) -> str:
         return str(self.created_at)
 
-
+    
+    def save(self, *args, force_insert=False, force_update=False, using=None, update_fields=None):
+        
+        # when report created send message to target group
+        if update_fields is None:
+            bot = TeleBot(BOTFATHER_HASH)
+            bot.send_message(self.group.groupID, self.text)
+            
+        return super().save(*args, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
