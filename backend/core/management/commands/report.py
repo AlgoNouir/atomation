@@ -6,9 +6,8 @@ from django.utils.timezone import localtime
 from time import sleep
 
 
-
-def connect2AI(group:GroupModel, fromTime:datetime, toTime:datetime):
-
+def getLogs(logs_list:list[str], fromTime:datetime, toTime:datetime) -> list[str]:
+    
     # ------------------------------------------------------------ GET LOGS
     
     logs = Log.objects.filter(
@@ -24,6 +23,13 @@ def connect2AI(group:GroupModel, fromTime:datetime, toTime:datetime):
         
     if txt == "":
         txt = "report for not working and empty logs"
+        
+    logs_list.append(txt)
+    return logs_list
+
+
+def connect2AI(group:GroupModel, logs:list[Log]):
+
     
     # ------------------------------------------------------------ GENERATE MODEL
     
@@ -96,6 +102,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         
         while True:
+            
+            logs_list = []
+            
             # run for each groups
             for group in GroupModel.objects.all():
                 times = getGroupReportTime(group)
@@ -104,12 +113,14 @@ class Command(BaseCommand):
                 if times is None:
                     print("not time for reporting")
                     continue
-                
+            
                 fromTime, toTime = times
+                logs_list = getLogs(logs_list, fromTime, toTime)
+                
+            if len(logs_list) > 0:
                 connect2AI(
                     group=group,
-                    fromTime=fromTime,
-                    toTime=toTime,
+                    logs=logs_list,
                 )
-            
+        
             sleep(3600)
