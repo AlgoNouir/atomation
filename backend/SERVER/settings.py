@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BOTFATHER_HASH = ""
+BOTFATHER_HASH = "7388867617:AAFuihPbPR_i6yG0pFPxj0lsCcurE_5N90s"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
