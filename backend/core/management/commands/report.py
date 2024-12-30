@@ -113,8 +113,8 @@ class Command(BaseCommand):
             
             now = localtime().hour
             groups = GroupModel.objects.filter(
-                fromTime__gte=now,
-                toTime__lt=now
+                fromTime__lte=now,
+                toTime__gt=now
                 
             )
             
