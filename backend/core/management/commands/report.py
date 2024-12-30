@@ -46,15 +46,15 @@ def connect2AI(group:GroupModel, fromTime:datetime, toTime:datetime):
 
     reports = ReportModel.objects.filter(group_id=group.pk)
     temp_reports = []
-    for report in reports:
-        temp_reports.append({
-            "role": "user",
-            "parts": [report.prompt]
-        })
-        temp_reports.append({
-            "role": "model",
-            "parts": [report.text]
-        })
+    # for report in reports:
+    #     temp_reports.append({
+    #         "role": "user",
+    #         "parts": [report.prompt]
+    #     })
+    #     temp_reports.append({
+    #         "role": "model",
+    #         "parts": [report.text]
+    #     })
     
     chat_session = model.start_chat(
         history=temp_reports
