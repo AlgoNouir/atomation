@@ -103,7 +103,7 @@ class Command(BaseCommand):
                 # check for time reporting
                 if times is None:
                     print("not time for reporting")
-                    return None
+                    continue
                 
                 fromTime, toTime = times
                 connect2AI(
