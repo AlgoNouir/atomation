@@ -22,13 +22,13 @@ def getLogs(group:GroupModel, logs_list:list[str], fromTime:datetime, toTime:dat
         txt += f"message: {log.message}"
         
     if txt == "":
-        txt = "report for not working and empty logs"
+        txt = f"report for not working of persons in team for {group.verbose} project"
         
     logs_list.append(txt)
     return logs_list
 
 
-def connect2AI(group:GroupModel, logs:list[Log]):
+def connect2AI(group:GroupModel, txt:str):
 
     
     # ------------------------------------------------------------ GENERATE MODEL
@@ -120,7 +120,7 @@ class Command(BaseCommand):
             if len(logs_list) > 0:
                 connect2AI(
                     group=group,
-                    logs=logs_list,
+                    txt='-------'.join(logs_list),
                 )
         
             sleep(3600)
