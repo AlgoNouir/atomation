@@ -78,6 +78,9 @@ def getGroupReportTime(group:GroupModel):
     
     lastReport = ReportModel.objects.filter(group_id=group.pk).order_by("-created_at").first()
     
+    if lastReport is None:
+        return None, localtime()
+    
     nextReportTime = lastReport.created_at + timedelta(minutes=group.repeetHour)
     
     # check time for reporting
