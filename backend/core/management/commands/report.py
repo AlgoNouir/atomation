@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from core.models import Log, ReportModel, GroupModel
 import google.generativeai as genai
 from django.utils.timezone import localtime
-
+from time import sleep
 
 
 
@@ -94,19 +94,22 @@ def getGroupReportTime(group:GroupModel):
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-
-        # run for each groups
-        for group in GroupModel.objects.all():
-            times = getGroupReportTime(group)
+        
+        while True:
+            # run for each groups
+            for group in GroupModel.objects.all():
+                times = getGroupReportTime(group)
+                
+                # check for time reporting
+                if times is None:
+                    print("not time for reporting")
+                    return None
+                
+                fromTime, toTime = times
+                connect2AI(
+                    group=group,
+                    fromTime=fromTime,
+                    toTime=toTime,
+                )
             
-            # check for time reporting
-            if times is None:
-                print("not time for reporting")
-                return None
-            
-            fromTime, toTime = times
-            connect2AI(
-                group=group,
-                fromTime=fromTime,
-                toTime=toTime,
-            )
+            sleep(3600)
