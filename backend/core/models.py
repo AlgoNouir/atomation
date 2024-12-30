@@ -121,8 +121,8 @@ class GroupModel(models.Model):
     systemMainPrompt = models.TextField(max_length=100000)
     repeetHour = models.IntegerField(default=1)
     projects = models.ManyToManyField(Project, blank=True)
-    fromTime = models.IntegerField(default=8)
-    toTime = models.IntegerField(default=16)
+    fromTime = models.IntegerField(default=12)
+    toTime = models.IntegerField(default=20)
     
     
     def __str__(self):
