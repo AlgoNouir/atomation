@@ -106,8 +106,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         
+        
+        now = localtime().hour
+        groups = GroupModel.objects.filter(
+            fromTime__gte=now,
+            toTime__lt=now
+            
+        )
+        
+        print(groups)
+        exit()
+        
         while True:
             
+            GroupModel.objects.filter(
+                
+            )
             
             # run for each groups
             for group in GroupModel.objects.all():

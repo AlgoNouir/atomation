@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from google.auth import default
 from telebot import TeleBot
 from SERVER.settings import BOTFATHER_HASH
 
@@ -120,8 +121,8 @@ class GroupModel(models.Model):
     systemMainPrompt = models.TextField(max_length=100000)
     repeetHour = models.IntegerField(default=1)
     projects = models.ManyToManyField(Project, blank=True)
-    fromTime = models.DateTimeField(null=True, blank=True)
-    toTime = models.DateTimeField(null=True, blank=True)
+    fromTime = models.IntegerField(default=8)
+    toTime = models.IntegerField(default=16)
     
     
     def __str__(self):
