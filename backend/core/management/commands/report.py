@@ -1,20 +1,19 @@
 from django.core.management.base import BaseCommand 
 from datetime import datetime, timedelta
-from core.models import Log, ReportModel
+from core.models import Log, ReportModel, GroupModel
 import google.generativeai as genai
-import os
+from django.utils.timezone import localtime
 
 
 
-def connect2AI():
+
+def connect2AI(group:GroupModel, fromTime:datetime, toTime:datetime):
 
     # ------------------------------------------------------------ GET LOGS
     
-    fromTime = datetime.now() - timedelta(hours=1)
-    toTime = datetime.now() 
-
     logs = Log.objects.filter(
-        timestamp__time__range=[fromTime, toTime]
+        timestamp__time__range=[fromTime, toTime],
+        project__in=group.projects.all()
     )
     
     txt = ""
@@ -42,10 +41,10 @@ def connect2AI():
     model = genai.GenerativeModel(
         model_name="gemini-2.0-flash-exp",
         generation_config=generation_config,
-        system_instruction="Your name is Athena. Mehdi Nouri's private secretary. You receive all the reports from Mr. Nouri and put them in Telegram groups. You speak formally and briefly. You rewrite the messages better, but you don't change its meaning. You convert all reports into a few paragraphs of text, like you have to report to Mehdi Nouri and Amin Arian in a Telegram group. You tell all the reports carefully and in detail as if you are chatting in the group",
+        system_instruction=group.systemMainPrompt,
     )
 
-    reports = ReportModel.objects.all()
+    reports = ReportModel.objects.filter(group_id=group.pk)
     temp_reports = []
     for report in reports:
         temp_reports.append({
@@ -67,13 +66,43 @@ def connect2AI():
 
     report = ReportModel.objects.create(
         prompt=txt,
-        text=response.text
+        text=response.text,
+        group=group,
     )
     
+    return report.text
+    
 
+
+def getGroupReportTime(group:GroupModel):
+    
+    lastReport = ReportModel.objects.filter(group_id=group.pk).order_by("-created_at").first()
+    
+    nextReportTime = lastReport.created_at + timedelta(minutes=group.repeetHour)
+    
+    # check time for reporting
+    if localtime() < nextReportTime:
+        return None
+    
+    # from last report time until now create report
+    return lastReport.created_at, localtime()
 
 
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        connect2AI()
+        group = GroupModel.objects.first()
+
+        times = getGroupReportTime(group)
+        
+        # check for time reporting
+        if times is None:
+            print("not time for reporting")
+            return None
+        
+        fromTime, toTime = times
+        connect2AI(
+            group=group,
+            fromTime=fromTime,
+            toTime=toTime,
+        )

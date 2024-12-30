@@ -1,6 +1,15 @@
 from django.contrib import admin
-from .models import Project, ProjectPermission, Milestone, Task, ChecklistItem, Comment, Dependency, Tag, TaskTag, Log
+from .models import Project, ProjectPermission, Milestone, Task, ChecklistItem, Comment, Dependency, Tag, TaskTag, Log, GroupModel, ReportModel
 
+@admin.register(GroupModel)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ('verbose', 'groupID', 'repeetHour')
+    filter_vertical = ["projects"]
+    
+@admin.register(ReportModel)
+class ReportModelAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'created_at', 'group')
+    
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'owner')

@@ -103,11 +103,35 @@ class Log(models.Model):
         return f"Log entry for {self.project.name} by {self.user.username}"
 
 
+
+class GroupTimeChoice(models.IntegerChoices):
+    
+    HOURLY = 1
+    DAILTY = 2
+    WEEKLY = 3
+    
+
+class GroupModel(models.Model):
+    
+    verbose = models.CharField(max_length=100, null=True, blank=True)
+    groupID = models.CharField(max_length=100)
+    systemMainPrompt = models.TextField(max_length=100000)
+    repeetHour = models.IntegerField(default=1)
+    projects = models.ManyToManyField(Project, blank=True)
+    
+    
+    def __str__(self):
+        return self.verbose
+    
+
 class ReportModel(models.Model):
     
     text = models.TextField(max_length=100000)
     prompt = models.TextField(max_length=100000)
     created_at = models.DateTimeField(auto_now_add=True)
+    group = models.ForeignKey(GroupModel, null=True, blank=True, on_delete=models.CASCADE)
     
     def __str__(self) -> str:
-        return self.created_at
+        return str(self.created_at)
+
+
