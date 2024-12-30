@@ -42,7 +42,12 @@ export const fetchLogs = createAsyncThunk(
             url += `projects/${projectId}/logs/`;
         }
 
-        const response = await axiosReq.get(url);
+        const response = await axiosReq.get(url,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
         return response.data;
     }
 );
@@ -51,7 +56,12 @@ export const fetchMilestoneLogs = createAsyncThunk(
     'log/fetchMilestoneLogs',
     async (milestoneId: string, { getState }) => {
         const { auth } = getState() as RootState;
-        const response = await axiosReq.get(`/api/milestones/${milestoneId}/logs/`);
+        const response = await axiosReq.get(`/api/milestones/${milestoneId}/logs/`,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
         return response.data;
     }
 );

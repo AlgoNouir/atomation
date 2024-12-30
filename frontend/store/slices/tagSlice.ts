@@ -25,7 +25,12 @@ export const fetchTags = createAsyncThunk(
   'tags/fetchTags',
   async (_, { getState }) => {
     const { auth } = getState() as RootState;
-    const response = await axiosReq.get("/api/tags/",);
+    const response = await axiosReq.get("/api/tags/",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
     return response.data;
   }
 );

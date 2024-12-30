@@ -77,6 +77,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                 const response = await axiosReq.put(
                     `/api/tasks/${task.id}/`,
                     updatedTaskData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        }
+                    }
                 );
 
                 dispatch(updateTask({ milestoneId: milestone.id, taskId: task.id, updatedTask: response.data }));

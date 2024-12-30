@@ -98,7 +98,12 @@ export const {
 export const login = (username: string, password: string): AppThunk => async (dispatch) => {
     try {
         dispatch(loginStart());
-        const response = await axiosReq.post("/api/token/", { username, password });
+        const response = await axiosReq.post("/api/token/", { username, password },
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
         const { access: token, ...userData } = response.data;
         localStorage.setItem('token', token);
         dispatch(loginSuccess({ token, user: userData }));
@@ -120,7 +125,12 @@ export const login = (username: string, password: string): AppThunk => async (di
 
 export const logoutUser = (): AppThunk => async (dispatch) => {
     try {
-        await axiosReq.post("/api/logout/");
+        await axiosReq.post("/api/logout/", undefined,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
     } catch (error) {
         console.error('Logout failed:', error);
     } finally {

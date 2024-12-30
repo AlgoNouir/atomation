@@ -26,7 +26,12 @@ export const fetchProjectUsers = createAsyncThunk(
   'users/fetchProjectUsers',
   async (_, { getState }) => {
     const { auth } = getState() as RootState;
-    const response = await axiosReq.get("/api/project-users");
+    const response = await axiosReq.get("/api/project-users",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
 
     console.log(response.data);
 

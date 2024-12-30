@@ -73,7 +73,12 @@ const initialState: ProjectState = {
 export const fetchProjects = createAsyncThunk(
     'projects/fetchProjects',
     async (_) => {
-        const response = await axiosReq.get("/api/projects/");
+        const response = await axiosReq.get("/api/projects/",
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            });
         return response.data;
     }
 );
@@ -85,6 +90,11 @@ export const createProject = createAsyncThunk(
         const response = await axiosReq.post(
             "/api/projects/",
             { name: projectName },
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            }
         );
         return response.data;
     }
@@ -96,6 +106,11 @@ export const createMilestone = createAsyncThunk(
         const response = await axiosReq.post(
             `/api/projects/${projectId}/milestones/`,
             { name },
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            }
         );
         return response.data;
     }
@@ -119,6 +134,11 @@ export const createTask = createAsyncThunk(
         const response = await axiosReq.post(
             `/api/milestones/${milestoneId}/tasks/`,
             formattedTask,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            }
         );
         return { milestoneId, task: { ...response.data, id: String(response.data.id) } };
     }
@@ -134,6 +154,11 @@ export const updateTaskThunk = createAsyncThunk(
                 start_date: updates.start_date,
                 due_date: updates.due_date,
             },
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                }
+            }
         );
         return { milestoneId, taskId, updatedTask: response.data };
     }
