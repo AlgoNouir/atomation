@@ -6,7 +6,7 @@ from django.utils.timezone import localtime
 from time import sleep
 
 
-def getLogs(logs_list:list[str], fromTime:datetime, toTime:datetime) -> list[str]:
+def getLogs(group:GroupModel, logs_list:list[str], fromTime:datetime, toTime:datetime) -> list[str]:
     
     # ------------------------------------------------------------ GET LOGS
     
@@ -115,7 +115,7 @@ class Command(BaseCommand):
                     continue
             
                 fromTime, toTime = times
-                logs_list = getLogs(logs_list, fromTime, toTime)
+                logs_list = getLogs(group, logs_list, fromTime, toTime)
                 
             if len(logs_list) > 0:
                 connect2AI(
