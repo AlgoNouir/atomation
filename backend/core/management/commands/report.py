@@ -114,8 +114,6 @@ class Command(BaseCommand):
             
         )
         
-        print(groups)
-        exit()
         
         while True:
             
