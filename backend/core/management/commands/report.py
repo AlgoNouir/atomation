@@ -81,7 +81,7 @@ def getGroupReportTime(group:GroupModel):
     if lastReport is None:
         return None, localtime()
     
-    nextReportTime = lastReport.created_at + timedelta(minutes=group.repeetHour)
+    nextReportTime = lastReport.created_at + timedelta(hours=group.repeetHour)
     
     # check time for reporting
     if localtime() < nextReportTime:
