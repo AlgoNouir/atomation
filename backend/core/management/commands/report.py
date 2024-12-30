@@ -91,18 +91,19 @@ def getGroupReportTime(group:GroupModel):
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        group = GroupModel.objects.first()
 
-        times = getGroupReportTime(group)
-        
-        # check for time reporting
-        if times is None:
-            print("not time for reporting")
-            return None
-        
-        fromTime, toTime = times
-        connect2AI(
-            group=group,
-            fromTime=fromTime,
-            toTime=toTime,
-        )
+        # run for each groups
+        for group in GroupModel.objects.all():
+            times = getGroupReportTime(group)
+            
+            # check for time reporting
+            if times is None:
+                print("not time for reporting")
+                return None
+            
+            fromTime, toTime = times
+            connect2AI(
+                group=group,
+                fromTime=fromTime,
+                toTime=toTime,
+            )
