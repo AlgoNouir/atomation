@@ -127,19 +127,22 @@ export const login = (username: string, password: string): AppThunk => async (di
 };
 
 export const logoutUser = (): AppThunk => async (dispatch) => {
-    try {
-        await axiosReq.post("/api/logout/", undefined,
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
-            });
-    } catch (error) {
-        console.error('Logout failed:', error);
-    } finally {
-        localStorage.removeItem('token');
-        dispatch(logout());
-    }
+
+    localStorage.removeItem('token');
+    dispatch(logout());
+    // try {
+    //     await axiosReq.post("/api/logout/", { refresh_token: "" }, //localStorage.getItem('refresh')
+    //         {
+    //             headers: {
+    //                 Authorization: `Bearer ${localStorage.getItem('token')}`,
+    //             }
+    //         });
+    // } catch (error) {
+    //     console.error('Logout failed:', error);
+    // } finally {
+    //     localStorage.removeItem('token');
+    //     dispatch(logout());
+    // }
 };
 
 export default authSlice.reducer;

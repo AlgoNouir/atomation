@@ -126,7 +126,7 @@ export const selectPermittedLogs = (state: RootState) => {
     return allLogs.filter(log =>
         role === 'admin' ||
         log.person === id ||
-        permittedProjects.includes(log.projectId)
+        (permittedProjects || []).includes(log.projectId)
     );
 };
 
