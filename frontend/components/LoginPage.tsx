@@ -12,11 +12,11 @@ const LoginPage: React.FC = () => {
   const { loading, error, isAuthenticated, redirectToPanel, activityLoading, role } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (isAuthenticated && redirectToPanel && !activityLoading) {
-  //     router.push('/panel');
-  //   }
-  // }, [isAuthenticated, redirectToPanel, activityLoading, router]);
+  useEffect(() => {
+    if (isAuthenticated && redirectToPanel && !activityLoading) {
+      router.push('/panel');
+    }
+  }, [isAuthenticated, redirectToPanel, activityLoading, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
+    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">
       <div className="bg-base-100 p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center">Login to Atomation</h1>
         <form onSubmit={handleSubmit} className="space-y-4">

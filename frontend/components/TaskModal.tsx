@@ -4,11 +4,13 @@ import { RootState, AppDispatch } from '../store/store';
 import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon, RefreshCw } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
 import { updateTaskStatusAndLog, updateTaskChecklistAndLog } from '@/store/slices/kanban';
+import { User } from '@/store/slices/userSlice';
+import { Tag } from '@/store/slices/tagSlice';
+import { UserRole } from '@/store/slices/accountSlice';
 import { format, isValid } from 'date-fns';
 import { unwrapResult } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { fetchMilestoneLogs } from '@/store/slices/logSlice';
-import { axiosReq } from '@/utils/axios';
 
 interface TaskModalProps {
     taskId: string;
@@ -34,7 +36,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [isLogsLoading, setIsLogsLoading] = useState(false);
-
 
     useEffect(() => {
         if (selectedMilestone) {
@@ -72,13 +73,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                     }))
                 };
 
-                const response = await axiosReq.put(
-                    `/api/tasks/${task.id}/`,
+                const response = await axios.put(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${task.id}/`,
                     updatedTaskData,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        }
+                        },
                     }
                 );
 
@@ -156,7 +157,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                     </button>
                 </div>
                 <div className="p-4 max-h-[80vh] overflow-y-auto">
-                    <div className="flex mb-4 border-b border-gray-200">
+                    <div className="flex mb-4 border-b border-gray-200 overflow-x-auto">
                         <button
                             className={`btn btn-ghost ${activeTab === 'details' ? 'btn-active' : ''}`}
                             onClick={() => setActiveTab('details')}
@@ -183,7 +184,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                         </button>
                     </div>
                     {activeTab === 'details' && (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="label">
                                     <span className="label-text font-semibold">Description</span>
@@ -204,7 +205,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         className="select select-bordered w-full"
                                         value={localTask.status}
                                         onChange={(e) => handleInputChange('status', e.target.value)}
-
+                                        disabled={userRole === 'user'}
                                     >
                                         <option value="To Do">To Do</option>
                                         <option value="In Progress">In Progress</option>
@@ -287,7 +288,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         }
                                     }}
                                     value=""
-
+                                    disabled={userRole === 'user'}
                                 >
                                     <option value="" disabled>Add a tag</option>
                                     {tags.filter(tag => !localTask.tags.includes(tag.id)).map(tag => (
@@ -303,7 +304,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     className="select select-bordered w-full"
                                     value={localTask.assignee || ''}
                                     onChange={(e) => handleInputChange('assignee', e.target.value || null)}
-
+                                    disabled={userRole === 'user'}
                                 >
                                     <option value="">Unassigned</option>
                                     {users.map(user => (
@@ -324,7 +325,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                             checked={item.isCompleted}
                                             onChange={() => toggleChecklistItem(item.id)}
                                             className="checkbox"
-
+                                            disabled={userRole === 'user'}
                                         />
                                         <span className={item.isCompleted ? 'line-through' : ''}>{item.text}</span>
                                     </li>
@@ -365,7 +366,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     placeholder="Add a comment"
-
+                                    disabled={userRole === 'user'}
                                 />
                                 {(userRole === 'admin' || userRole === 'owner') && (
                                     <button className="btn btn-primary btn-square" onClick={addComment}>
@@ -399,13 +400,15 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                     )}
                 </div>
                 <div className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                        onClick={handleSave}
-                        className={`btn btn-primary ${isSaving ? 'loading' : ''}`}
-                        disabled={isSaving}
-                    >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
+                    {(userRole === 'admin' || userRole === 'owner') && (
+                        <button
+                            onClick={handleSave}
+                            className={`btn btn-primary ${isSaving ? 'loading' : ''}`}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    )}
                 </div>
                 {saveError && (
                     <div className="text-error text-center mt-2">

@@ -12,11 +12,6 @@ import AddTaskModal from './AddTaskModal';
 import { UserRole } from '@/store/slices/accountSlice';
 import ProjectPermissionsModal from './ProjectPermissionsModal';
 
-interface Task {
-  status: string;
-  // ... other task properties
-}
-
 const ProjectList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const projects = useSelector((state: RootState) => state.projects.projects);
@@ -89,10 +84,10 @@ const ProjectList: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4">
+    <div className="h-full flex flex-col overflow-y-auto">
+      <div className="p-4 flex-grow">
         <h2 className="text-2xl font-bold mb-6">Projects</h2>
-        <div className="space-y-4 overflow-y-auto">
+        <div className="space-y-4">
           {projects.map((project) => (
             <div key={project.id} className="bg-base-100 rounded-lg shadow-md overflow-hidden">
               <div
@@ -126,7 +121,7 @@ const ProjectList: React.FC = () => {
                             <CheckCircle2 size={16} className={selectedMilestone === milestone.id ? 'text-primary-content' : 'text-primary'} />
                             <span>{milestone.name}</span>
                           </div>
-                          {(userRole === 'admin' || userRole === 'owner' || project.permissions.find(p => p.user === currentUserId)?.role === 'editor') && (
+                          {(userRole === 'admin' || userRole === 'owner' || project.permissions.find(p => p.userId === currentUserId)?.role === 'editor') && (
                             <button
                               className="btn btn-xs btn-ghost"
                               onClick={(e) => {
@@ -175,7 +170,7 @@ const ProjectList: React.FC = () => {
           ))}
         </div>
       </div>
-      <div className="mt-auto p-4">
+      <div className="mt-auto p-4 border-t border-base-300">
         <LogViewer onShowMore={() => setIsLogModalOpen(true)} />
       </div>
       <LogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />

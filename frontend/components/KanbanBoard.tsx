@@ -112,7 +112,6 @@ const KanbanBoard: React.FC = () => {
 
 
     const userPermission = project.permissions.find(p => p.user === currentUserId);
-    console.log(project);
     if (!userPermission && userRole !== 'owner') {
         return <div className="text-center py-8">You don't have permission to view this project.</div>;
     }
@@ -122,7 +121,7 @@ const KanbanBoard: React.FC = () => {
     return (
         <>
             <DragDropContext onDragEnd={onDragEnd}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
                     {columnOrder.map((columnId) => {
                         const column = columns[columnId];
                         const columnTasks = column.taskIds
@@ -229,4 +228,3 @@ const KanbanBoard: React.FC = () => {
 };
 
 export default KanbanBoard;
-
