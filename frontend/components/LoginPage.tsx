@@ -12,11 +12,11 @@ const LoginPage: React.FC = () => {
   const { loading, error, isAuthenticated, redirectToPanel, activityLoading, role } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
 
-  useEffect(() => {
-    if (isAuthenticated && redirectToPanel && !activityLoading) {
-      router.push('/panel');
-    }
-  }, [isAuthenticated, redirectToPanel, activityLoading, router]);
+  // useEffect(() => {
+  //   if (isAuthenticated && redirectToPanel && !activityLoading) {
+  //     router.push('/panel');
+  //   }
+  // }, [isAuthenticated, redirectToPanel, activityLoading, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
