@@ -8,9 +8,9 @@ import SettingsModal from '@/components/SettingsModal';
 import TeamModal from '@/components/TeamModal';
 import LogModal from '@/components/LogModal';
 import { Sun, Moon, Settings, LogOut, Users, Menu } from 'lucide-react';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store/store';
-import { logout, logoutUser } from '@/store/slices/authSlice';
+import { logoutUser } from '@/store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import LoginPage from '@/components/LoginPage';
 
 // New Modals component
 const Modals = ({
@@ -20,7 +20,7 @@ const Modals = ({
   setIsTeamModalOpen,
   isLogModalOpen,
   setIsLogModalOpen
-}) => {
+}: { [key in string]: any }) => {
   return (
     <>
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
@@ -36,8 +36,10 @@ export default function KanbanPage() {
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const auth = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const auth = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+
+
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -50,6 +52,10 @@ export default function KanbanPage() {
   const handleLogout = () => {
     dispatch(logoutUser());
   };
+
+  if (!auth.token || !auth.isAuthenticated) {
+    return <LoginPage />
+  }
 
   return (
     <div className="drawer lg:drawer-open">
@@ -94,7 +100,7 @@ export default function KanbanPage() {
                     <div className="ml-4 flex items-center">
                       <span className="text-sm font-medium text-base-content mr-2">{auth.name}</span>
                       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content">
-                        {auth.name.charAt(0)}
+                        {(auth?.name || "U").charAt(0)}
                       </div>
                     </div>
                     <button

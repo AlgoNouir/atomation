@@ -31,7 +31,7 @@ const initialState: AuthState = {
     avatar: undefined,
     role: 'user',
     permittedProjects: [],
-    token: localStorage.getItem('token'),
+    token: '',
     isAuthenticated: false,
     loading: false,
     error: null,

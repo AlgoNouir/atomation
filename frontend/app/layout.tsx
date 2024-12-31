@@ -3,11 +3,9 @@
 import { Provider } from 'react-redux'
 import { store } from '../store/store'
 import './globals.css'
-import { useSelector } from 'react-redux'
 import { RootState } from '@/store/store'
 import LoginPage from '@/components/LoginPage'
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAppSelector } from '@/store/hooks'
 
 export default function RootLayout({
   children,
@@ -26,13 +24,6 @@ export default function RootLayout({
 }
 
 const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth);
-  const router = useRouter();
-
-
-  if (!token) {
-    return <LoginPage />
-  }
 
 
   return <>{children}</>;
