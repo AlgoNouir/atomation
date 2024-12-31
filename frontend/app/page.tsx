@@ -6,18 +6,38 @@ import GanttChartContainer from '@/components/GanttChartContainer';
 import ProjectList from '@/components/ProjectList';
 import SettingsModal from '@/components/SettingsModal';
 import TeamModal from '@/components/TeamModal';
+import LogModal from '@/components/LogModal';
 import { Sun, Moon, Settings, LogOut, Users, Menu } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import { logout, logoutUser } from '@/store/slices/authSlice';
+
+// New Modals component
+const Modals = ({
+  isSettingsOpen,
+  setIsSettingsOpen,
+  isTeamModalOpen,
+  setIsTeamModalOpen,
+  isLogModalOpen,
+  setIsLogModalOpen
+}) => {
+  return (
+    <>
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <TeamModal isOpen={isTeamModalOpen} onClose={() => setIsTeamModalOpen(false)} />
+      <LogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />
+    </>
+  );
+};
 
 export default function KanbanPage() {
   const [theme, setTheme] = useState('light');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const auth = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
+  const auth = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -43,7 +63,7 @@ export default function KanbanPage() {
                 <label htmlFor="project-drawer" className="btn btn-primary drawer-button lg:hidden mr-2">
                   <Menu size={24} />
                 </label>
-                <a className="mr-3 flex-none  overflow-hidden md:w-auto" href="/">
+                <a className="mr-3 flex-none w-[2.0625rem] overflow-hidden md:w-auto" href="/">
                   <span className="sr-only">Kanban Board</span>
                   <h1 className="text-2xl font-bold">Atomation</h1>
                 </a>
@@ -92,17 +112,23 @@ export default function KanbanPage() {
         </header>
         <main className="p-4 md:p-8 overflow-y-auto flex-grow">
           <KanbanBoard />
-          {/* <GanttChartContainer theme={theme} /> */}
+          <GanttChartContainer theme={theme} />
         </main>
       </div>
       <div className="drawer-side">
         <label htmlFor="project-drawer" className="drawer-overlay"></label>
         <div className="w-80 bg-base-200 h-full">
-          <ProjectList />
+          <ProjectList onShowLogModal={() => setIsLogModalOpen(true)} />
         </div>
       </div>
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      <TeamModal isOpen={isTeamModalOpen} onClose={() => setIsTeamModalOpen(false)} />
+      <Modals
+        isSettingsOpen={isSettingsOpen}
+        setIsSettingsOpen={setIsSettingsOpen}
+        isTeamModalOpen={isTeamModalOpen}
+        setIsTeamModalOpen={setIsTeamModalOpen}
+        isLogModalOpen={isLogModalOpen}
+        setIsLogModalOpen={setIsLogModalOpen}
+      />
     </div>
   );
 }

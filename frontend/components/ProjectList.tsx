@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { FolderIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2, PlusIcon, CircleDot, Circle, CheckCircle } from 'lucide-react';
 import { RootState, AppDispatch } from '../store/store';
 import { setSelectedMilestone, fetchProjects } from '@/store/slices/project';
 import { setTasks } from '@/store/slices/kanban';
 import LogViewer from './LogViewer';
-import LogModal from './LogModal';
+// import LogModal from './LogModal'; //Removed as per update
 import CreateProjectModal from './CreateProjectModal';
 import CreateMilestoneModal from './CreateMilestoneModal';
 import AddTaskModal from './AddTaskModal';
+import { UserRole } from '@/store/slices/accountSlice';
 import ProjectPermissionsModal from './ProjectPermissionsModal';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
-const ProjectList: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const projects = useAppSelector((state) => state.projects.projects);
-  const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
-  const { role: userRole, id: currentUserId } = useAppSelector((state) => state.auth);
+const ProjectList: React.FC<{ onShowLogModal: () => void }> = ({ onShowLogModal }) => { //Update 1
+  const dispatch = useDispatch<AppDispatch>();
+  const projects = useSelector((state: RootState) => state.projects.projects);
+  const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
+  const { role: userRole, id: currentUserId } = useSelector((state: RootState) => state.auth);
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -170,9 +171,9 @@ const ProjectList: React.FC = () => {
         </div>
       </div>
       <div className="mt-auto p-4 border-t border-base-300">
-        <LogViewer onShowMore={() => setIsLogModalOpen(true)} />
+        <LogViewer onShowMore={onShowLogModal} /> {/*Update 2*/}
       </div>
-      <LogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />
+      {/* <LogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />  Update 3 */}
       {userRole === 'owner' && (
         <button
           className="mt-4 btn btn-primary w-full"
