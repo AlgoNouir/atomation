@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/store/hooks';
 import { RootState } from '../store/store';
 import { ClockIcon, UserIcon } from 'lucide-react';
 import { selectPermittedLogs } from '@/store/slices/logSlice';
@@ -9,7 +9,7 @@ interface LogViewerProps {
 }
 
 const LogViewer: React.FC<LogViewerProps> = ({ onShowMore }) => {
-  const logs = useSelector(selectPermittedLogs);
+  const logs = useAppSelector(selectPermittedLogs);
 
   return (
     <div className="bg-base-100 rounded-lg shadow-md p-4">

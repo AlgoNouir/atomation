@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppDispatch, RootState } from '../store/store';
 import { addTask } from '@/store/slices/project';
 import { X } from 'lucide-react';
@@ -11,9 +11,9 @@ interface CreateTaskModalProps {
 }
 
 const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClose, milestoneId }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const users = useSelector((state: RootState) => state.users.users);
-  const tags = useSelector((state: RootState) => state.tags.tags);
+  const dispatch = useAppDispatch();
+  const users = useAppSelector((state) => state.users.users);
+  const tags = useAppSelector((state) => state.tags.tags);
 
   const [taskName, setTaskName] = useState('');
   const [description, setDescription] = useState('');

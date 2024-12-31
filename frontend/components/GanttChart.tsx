@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { Task, Dependency } from '@/types/gantt';
 import { calculateTaskDuration, calculateCriticalPath } from '@/utils/gantt-utils';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { User } from '@/store/slices/userSlice';
 
@@ -15,9 +15,9 @@ interface GanttChartProps {
 
 const GanttChart: React.FC<GanttChartProps> = ({ onTaskUpdate, theme }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const projects = useSelector((state: RootState) => state.projects.projects);
-  const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
-  const users = useSelector((state: RootState) => state.users.users);
+  const projects = useAppSelector((state) => state.projects.projects);
+  const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
+  const users = useAppSelector((state) => state.users.users);
 
   const milestone = projects.flatMap(p => p.milestones).find(m => m?.id === selectedMilestone);
   const tasks = milestone ? milestone.tasks : [];

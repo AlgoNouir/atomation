@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState, AppDispatch } from '../store/store';
 import { updateTaskThunk } from '@/store/slices/project';
 import { X } from 'lucide-react';
@@ -12,8 +12,8 @@ interface TaskDependencyModalProps {
 }
 
 const TaskDependencyModal: React.FC<TaskDependencyModalProps> = ({ isOpen, onClose, taskId, milestoneId }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const tasks = useSelector((state: RootState) =>
+  const dispatch = useAppDispatch();
+  const tasks = useAppSelector((state) =>
     state.projects.projects
       .flatMap(p => p.milestones)
       .find(m => m.id === milestoneId)?.tasks || []

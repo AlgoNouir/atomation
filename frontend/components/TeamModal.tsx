@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { X, User, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -11,10 +11,10 @@ interface TeamModalProps {
 }
 
 const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
-  const users = useSelector((state: RootState) => state.users.users);
-  const projects = useSelector((state: RootState) => state.projects.projects);
-  const logs = useSelector((state: RootState) => state.log.entries);
-  const currentUser = useSelector((state: RootState) => state.auth);
+  const users = useAppSelector((state) => state.users.users);
+  const projects = useAppSelector((state) => state.projects.projects);
+  const logs = useAppSelector((state) => state.log.entries);
+  const currentUser = useAppSelector((state) => state.auth);
 
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 

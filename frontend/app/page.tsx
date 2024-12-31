@@ -7,7 +7,7 @@ import ProjectList from '@/components/ProjectList';
 import SettingsModal from '@/components/SettingsModal';
 import TeamModal from '@/components/TeamModal';
 import { Sun, Moon, Settings, LogOut, Users, Menu } from 'lucide-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState } from '@/store/store';
 import { logout, logoutUser } from '@/store/slices/authSlice';
 
@@ -16,8 +16,8 @@ export default function KanbanPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const auth = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const auth = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

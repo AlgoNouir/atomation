@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import { FolderIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2, PlusIcon, CircleDot, Circle, CheckCircle } from 'lucide-react';
 import { RootState, AppDispatch } from '../store/store';
 import { setSelectedMilestone, fetchProjects } from '@/store/slices/project';
@@ -9,14 +8,14 @@ import LogModal from './LogModal';
 import CreateProjectModal from './CreateProjectModal';
 import CreateMilestoneModal from './CreateMilestoneModal';
 import AddTaskModal from './AddTaskModal';
-import { UserRole } from '@/store/slices/accountSlice';
 import ProjectPermissionsModal from './ProjectPermissionsModal';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 const ProjectList: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const projects = useSelector((state: RootState) => state.projects.projects);
-  const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
-  const { role: userRole, id: currentUserId } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const projects = useAppSelector((state) => state.projects.projects);
+  const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
+  const { role: userRole, id: currentUserId } = useAppSelector((state) => state.auth);
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);

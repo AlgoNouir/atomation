@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/store/hooks';
 import { RootState } from '../store/store';
 import { ClockIcon, XIcon, ActivityIcon, CalendarIcon, UserIcon } from 'lucide-react';
 import { selectPermittedLogs } from '@/store/slices/logSlice';
@@ -21,7 +21,7 @@ interface GroupedLogs {
 }
 
 const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
-  const logs = useSelector(selectPermittedLogs);
+  const logs = useAppSelector(selectPermittedLogs);
 
   const groupedLogs = useMemo(() => {
     return logs.reduce((groups: GroupedLogs, log) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppDispatch, RootState } from '../store/store';
 import { updateProjectPermissions } from '@/store/slices/project';
 import { X } from 'lucide-react';
@@ -11,11 +11,11 @@ interface ProjectPermissionsModalProps {
 }
 
 const ProjectPermissionsModal: React.FC<ProjectPermissionsModalProps> = ({ isOpen, onClose, projectId }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const project = useSelector((state: RootState) =>
+  const dispatch = useAppDispatch();
+  const project = useAppSelector((state) =>
     state.projects.projects.find(p => p.id === projectId)
   );
-  const users = useSelector((state: RootState) => state.users.users);
+  const users = useAppSelector((state) => state.users.users);
 
   const [permissions, setPermissions] = useState(project?.permissions || []);
 

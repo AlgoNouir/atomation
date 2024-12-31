@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
 import { RootState } from '@/store/store';
 import { useRouter } from 'next/navigation';
@@ -8,8 +8,8 @@ import { Loader2 } from 'lucide-react';
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const dispatch = useDispatch();
-  const { loading, error, isAuthenticated, redirectToPanel, activityLoading, role } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { loading, error, isAuthenticated, redirectToPanel, activityLoading, role } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
   useEffect(() => {

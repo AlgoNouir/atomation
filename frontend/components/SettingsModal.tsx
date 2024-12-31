@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState, AppDispatch } from '../store/store';
 import { updateAccount } from '@/store/slices/authSlice';
 import { X } from 'lucide-react';
@@ -10,8 +10,8 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const auth = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
   const [name, setName] = useState(auth.name);
   const [email, setEmail] = useState(auth.email);
 

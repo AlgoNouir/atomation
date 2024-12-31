@@ -1,6 +1,6 @@
 'use client'
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import GanttChart from './GanttChart';
 import { RootState, AppDispatch } from '../store/store';
 import { updateTaskThunk } from '@/store/slices/project';
@@ -11,9 +11,9 @@ interface GanttChartContainerProps {
 }
 
 const GanttChartContainer: React.FC<GanttChartContainerProps> = ({ theme }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
-  const tasks = useSelector((state: RootState) => {
+  const dispatch = useAppDispatch();
+  const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
+  const tasks = useAppSelector((state) => {
     const milestone = state.projects.projects
       .flatMap(p => p.milestones)
       .find(m => m?.id === selectedMilestone);

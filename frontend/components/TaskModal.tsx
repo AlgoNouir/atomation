@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { RootState, AppDispatch } from '../store/store';
 import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon, RefreshCw } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
@@ -18,13 +18,13 @@ interface TaskModalProps {
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
-    const dispatch = useDispatch<AppDispatch>();
-    const projects = useSelector((state: RootState) => state.projects.projects);
-    const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
-    const users = useSelector((state: RootState) => state.users.users);
-    const tags = useSelector((state: RootState) => state.tags.tags);
-    const userRole = useSelector((state: RootState) => state.auth.role);
-    const logs = useSelector((state: RootState) => state.log.entries);
+    const dispatch = useAppDispatch();
+    const projects = useAppSelector((state) => state.projects.projects);
+    const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
+    const users = useAppSelector((state) => state.users.users);
+    const tags = useAppSelector((state) => state.tags.tags);
+    const userRole = useAppSelector((state) => state.auth.role);
+    const logs = useAppSelector((state) => state.log.entries);
 
     const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     const task = milestone?.tasks.find(t => t.id === taskId);

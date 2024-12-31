@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../store/store';
 import { createProject } from '@/store/slices/project';
 import { X } from 'lucide-react';
+import { useAppDispatch } from '@/store/hooks';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -10,7 +9,7 @@ interface CreateProjectModalProps {
 }
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const [projectName, setProjectName] = useState('');
 
   const handleCreate = async () => {

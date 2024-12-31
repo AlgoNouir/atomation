@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store/store';
 import { createMilestone } from '@/store/slices/project';
 import { X } from 'lucide-react';
+import { useAppDispatch } from '@/store/hooks';
 
 interface CreateMilestoneModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface CreateMilestoneModalProps {
 }
 
 const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ isOpen, onClose, projectId }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const [milestoneName, setMilestoneName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

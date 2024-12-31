@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppDispatch, RootState } from '../store/store';
 import { createTask } from '@/store/slices/project';
 import { fetchTags } from '@/store/slices/tagSlice';
@@ -16,10 +16,10 @@ interface ChecklistItem {
 }
 
 const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const users = useSelector((state: RootState) => state.users.users);
-  const tags = useSelector((state: RootState) => state.tags.tags);
-  const tagStatus = useSelector((state: RootState) => state.tags.status);
+  const dispatch = useAppDispatch();
+  const users = useAppSelector((state) => state.users.users);
+  const tags = useAppSelector((state) => state.tags.tags);
+  const tagStatus = useAppSelector((state) => state.tags.status);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
