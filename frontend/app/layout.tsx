@@ -1,11 +1,12 @@
-'use client'
 
-import { Provider } from 'react-redux'
-import { store } from '../store/store'
 import './globals.css'
-import { RootState } from '@/store/store'
-import LoginPage from '@/components/LoginPage'
-import { useAppSelector } from '@/store/hooks'
+import { Metadata } from 'next'
+import ProviderComponent from '../components/reduxHandler'
+
+
+export const metadata: Metadata = {
+  title: 'Atimation-Manager'
+}
 
 export default function RootLayout({
   children,
@@ -15,17 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className='overflow-hidden'>
-        <Provider store={store}>
-          <AuthWrapper>{children}</AuthWrapper>
-        </Provider>
+        <ProviderComponent>
+          {children}
+        </ProviderComponent>
       </body>
     </html>
   )
 }
-
-const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-
-
-  return <>{children}</>;
-};
-
