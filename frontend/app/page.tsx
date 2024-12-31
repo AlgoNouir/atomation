@@ -92,7 +92,7 @@ export default function KanbanPage() {
         </header>
         <main className="p-4 md:p-8 overflow-y-auto flex-grow">
           <KanbanBoard />
-          <GanttChartContainer theme={theme} />
+          {/* <GanttChartContainer theme={theme} /> */}
         </main>
       </div>
       <div className="drawer-side">
