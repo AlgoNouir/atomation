@@ -10,17 +10,16 @@ class GroupAdmin(admin.ModelAdmin):
 class ReportModelAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'group')
     
+
+class ProjectPermissionAdmin(admin.TabularInline):
+    model = ProjectPermission
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'owner')
     search_fields = ('name', 'owner__username')
     list_filter = ('owner',)
-
-@admin.register(ProjectPermission)
-class ProjectPermissionAdmin(admin.ModelAdmin):
-    list_display = ('project', 'user', 'role')
-    list_filter = ('role',)
-    search_fields = ('project__name', 'user__username')
+    inlines = [ProjectPermissionAdmin]
 
 @admin.register(Milestone)
 class MilestoneAdmin(admin.ModelAdmin):
