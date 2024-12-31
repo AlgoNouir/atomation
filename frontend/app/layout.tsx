@@ -30,7 +30,7 @@ const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
 
 
-  if (!isAuthenticated || !token) {
+  if (!token) {
     return <LoginPage />
   }
 
