@@ -45,7 +45,8 @@ interface Milestone {
 }
 
 interface ProjectPermission {
-    userId: string;
+    id: number
+    user: number;
     role: 'viewer' | 'editor' | 'admin';
 }
 
@@ -173,7 +174,7 @@ const projectSlice = createSlice({
                 id: Date.now().toString(),
                 name: action.payload.name,
                 milestones: [],
-                permissions: [{ userId: action.payload.ownerId, role: 'admin' }],
+                permissions: [{ user: action.payload.ownerId, role: 'admin' }],
             };
             state.projects.push(newProject);
         },

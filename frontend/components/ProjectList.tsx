@@ -126,7 +126,7 @@ const ProjectList: React.FC = () => {
                             <CheckCircle2 size={16} className={selectedMilestone === milestone.id ? 'text-primary-content' : 'text-primary'} />
                             <span>{milestone.name}</span>
                           </div>
-                          {(userRole === 'admin' || userRole === 'owner' || project.permissions.find(p => p.userId === currentUserId)?.role === 'editor') && (
+                          {(userRole === 'admin' || userRole === 'owner' || project.permissions.find(p => p.user === currentUserId)?.role === 'editor') && (
                             <button
                               className="btn btn-xs btn-ghost"
                               onClick={(e) => {

@@ -10,7 +10,7 @@ import { axiosReq } from '@/utils/axios';
 export type UserRole = 'user' | 'admin' | 'owner';
 
 interface AuthState {
-    id: string;
+    id: number;
     name: string;
     email: string;
     avatar?: string;
@@ -25,7 +25,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-    id: '',
+    id: -1,
     name: '',
     email: '',
     avatar: undefined,
@@ -48,6 +48,9 @@ const authSlice = createSlice({
             state.error = null;
         },
         loginSuccess: (state, action: PayloadAction<{ token: string; user: Omit<AuthState, 'token' | 'isAuthenticated' | 'loading' | 'error' | 'redirectToPanel' | 'activityLoading'> }>) => {
+            console.log("data in login", action.payload);
+
+
             state.token = action.payload.token;
             state.id = action.payload.user.id;
             state.name = action.payload.user.name;
@@ -119,7 +122,7 @@ export const login = (username: string, password: string): AppThunk => async (di
         dispatch(activityFetchComplete());
         dispatch(setRedirectToPanel());
     } catch (error) {
-        dispatch(loginFailure(error.response?.data?.detail || 'Login failed'));
+        dispatch(loginFailure('Login failed'));
     }
 };
 

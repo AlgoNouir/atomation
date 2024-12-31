@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { moveTask, updateTaskStatusAndLog } from '@/store/slices/kanban';
-import { updateTask, selectPermittedTasks } from '@/store/slices/project';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store/store';
+import { updateTask } from '@/store/slices/project';
 import TaskModal from './TaskModal';
 import TaskDependencyModal from './TaskDependencyModal';
-import { Calendar, Clock, AlertCircle, CheckCircle2, Tag, User, Link } from 'lucide-react';
-import { User as UserType } from '@/store/slices/userSlice';
-import { TagIcon } from 'lucide-react';
-import { UserRole } from '@/store/slices/accountSlice';
+import { Calendar, CheckCircle2, Tag, User, Link } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 const KanbanBoard: React.FC = () => {
-    const { columns, columnOrder } = useSelector((state: RootState) => state.kanban);
-    const projects = useSelector((state: RootState) => state.projects.projects);
-    const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
-    const dispatch = useDispatch<AppDispatch>();
+    const { columns, columnOrder } = useAppSelector((state) => state.kanban);
+    const projects = useAppSelector((state) => state.projects.projects);
+    const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
+    const dispatch = useAppDispatch();
     const [selectedTask, setSelectedTask] = useState<string | null>(null);
     const [isDependencyModalOpen, setIsDependencyModalOpen] = useState(false);
-    const users = useSelector((state: RootState) => state.users.users);
-    const tags = useSelector((state: RootState) => state.tags.tags);
-    const { role: userRole, id: currentUserId } = useSelector((state: RootState) => state.auth);
-    const permittedTasks = useSelector(selectPermittedTasks);
+    const users = useAppSelector((state) => state.users.users);
+    const tags = useAppSelector((state) => state.tags.tags);
+    const { role: userRole, id: currentUserId } = useAppSelector((state) => state.auth);
+    const user = useAppSelector((state) => state.auth);
+    console.log(user);
 
-    const tasks = useSelector((state: RootState) => state.kanban.tasks);
+
+    const tasks = useAppSelector((state) => state.kanban.tasks);
 
     //const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     //const tasks = milestone ? milestone.tasks : [];
@@ -112,12 +110,14 @@ const KanbanBoard: React.FC = () => {
         return <div className="text-center py-8">Project not found.</div>;
     }
 
-    const userPermission = project.permissions.find(p => p.userId === currentUserId);
+
+    const userPermission = project.permissions.find(p => p.user === currentUserId);
+    console.log(project);
     if (!userPermission && userRole !== 'owner') {
         return <div className="text-center py-8">You don't have permission to view this project.</div>;
     }
 
-    const canEdit = userRole === 'owner' || userPermission?.role === 'admin' || userPermission?.role === 'editor';
+    const canEdit = userRole === 'owner' || userRole === 'admin'
 
     return (
         <>

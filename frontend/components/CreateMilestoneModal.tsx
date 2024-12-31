@@ -25,8 +25,6 @@ const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ isOpen, onC
         setMilestoneName('');
         onClose();
       } catch (err) {
-        console.log(err);
-
         setError('Failed to create milestone. Please try again.');
       } finally {
         setIsLoading(false);

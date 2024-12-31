@@ -22,7 +22,7 @@ const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
 
   const getUserStats = (userId: string) => {
     const userProjects = projects.filter(project =>
-      project.permissions.some(permission => permission.userId === userId)
+      project.permissions.some(permission => permission.user === userId)
     );
     const userTasks = projects.flatMap(project =>
       project.milestones.flatMap(milestone =>

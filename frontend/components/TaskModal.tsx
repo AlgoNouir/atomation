@@ -35,8 +35,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
     const [saveError, setSaveError] = useState<string | null>(null);
     const [isLogsLoading, setIsLogsLoading] = useState(false);
 
-    console.log(users);
-
 
     useEffect(() => {
         if (selectedMilestone) {

@@ -370,8 +370,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        role = 'owner' if self.user.is_superuser else 'admin' if self.user.is_staff else 'user'
-        data['role'] = role
+        data = UserSerializer(self.user).data
+        data['role'] = 'owner' if self.user.is_superuser else 'admin' if self.user.is_staff else 'user'
         return data
 
 class CustomTokenObtainPairView(TokenObtainPairView):

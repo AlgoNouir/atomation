@@ -33,8 +33,6 @@ export const fetchProjectUsers = createAsyncThunk(
         }
       });
 
-    console.log(response.data);
-
 
     return response.data.map((d: { [key: string]: string }) => ({ ...d, name: d.get_full_name }));
   }

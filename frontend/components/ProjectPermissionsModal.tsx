@@ -27,10 +27,10 @@ const ProjectPermissionsModal: React.FC<ProjectPermissionsModalProps> = ({ isOpe
 
   const handlePermissionChange = (userId: string, role: 'viewer' | 'editor' | 'admin') => {
     const newPermissions = permissions.map(p =>
-      p.userId === userId ? { ...p, role } : p
+      p.user === userId ? { ...p, role } : p
     );
-    if (!newPermissions.some(p => p.userId === userId)) {
-      newPermissions.push({ userId, role });
+    if (!newPermissions.some(p => p.user === userId)) {
+      newPermissions.push({ user: userId, role });
     }
     setPermissions(newPermissions);
   };
@@ -58,7 +58,7 @@ const ProjectPermissionsModal: React.FC<ProjectPermissionsModalProps> = ({ isOpe
             <div key={user.id} className="flex items-center justify-between">
               <span>{user.name}</span>
               <select
-                value={permissions.find(p => p.userId === user.id)?.role || 'none'}
+                value={permissions.find(p => p.user === user.id)?.role || 'none'}
                 onChange={(e) => handlePermissionChange(user.id, e.target.value as 'viewer' | 'editor' | 'admin')}
                 className="select select-bordered"
               >
