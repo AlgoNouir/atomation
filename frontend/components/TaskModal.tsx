@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { X, Calendar, TagIcon, Paperclip, Plus, Trash, CheckSquare, MessageSquare, Users, RemoveFormattingIcon as RemoveIcon, RefreshCw } from 'lucide-react';
 import { updateTask } from '@/store/slices/project';
@@ -18,13 +18,13 @@ interface TaskModalProps {
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
-    const dispatch = useAppDispatch();
-    const projects = useAppSelector((state) => state.projects.projects);
-    const selectedMilestone = useAppSelector((state) => state.projects.selectedMilestone);
-    const users = useAppSelector((state) => state.users.users);
-    const tags = useAppSelector((state) => state.tags.tags);
-    const userRole = useAppSelector((state) => state.auth.role);
-    const logs = useAppSelector((state) => state.log.entries);
+    const dispatch = useDispatch<AppDispatch>();
+    const projects = useSelector((state: RootState) => state.projects.projects);
+    const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
+    const users = useSelector((state: RootState) => state.users.users);
+    const tags = useSelector((state: RootState) => state.tags.tags);
+    const userRole = useSelector((state: RootState) => state.auth.role);
+    const logs = useSelector((state: RootState) => state.log.entries);
 
     const milestone = projects.flatMap(p => p.milestones).find(m => m.id === selectedMilestone);
     const task = milestone?.tasks.find(t => t.id === taskId);
@@ -49,12 +49,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
 
     const handleInputChange = (field: string, value: any) => {
         if (field === 'start_date' || field === 'due_date' || field === 'deadline') {
-            setLocalTask({ ...localTask, [field]: new Date(value).toISOString() });
+            setLocalTask({ ...localTask, [field]: value ? new Date(value).toISOString() : null });
         } else {
             setLocalTask({ ...localTask, [field]: value });
-            if (field === 'status' && milestone) {
-                dispatch(updateTaskStatusAndLog(task.id, value));
-            }
+        }
+        if (field === 'status' && milestone) {
+            dispatch(updateTaskStatusAndLog(task.id, value, milestone.project));
         }
     };
 
@@ -147,6 +147,24 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
         }
     };
 
+    const renderDateInput = (field: 'start_date' | 'due_date' | 'deadline', label: string) => (
+        <div>
+            <label className="label">
+                <span className="label-text font-semibold">{label}</span>
+            </label>
+            {userRole === 'admin' || userRole === 'owner' ? (
+                <input
+                    type="datetime-local"
+                    value={localTask[field] ? format(new Date(localTask[field]), "yyyy-MM-dd'T'HH:mm") : ''}
+                    onChange={(e) => handleInputChange(field, e.target.value || null)}
+                    className="input input-bordered w-full"
+                />
+            ) : (
+                <p className="text-sm">{localTask[field] ? new Date(localTask[field]).toLocaleString() : 'Not set'}</p>
+            )}
+        </div>
+    );
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="relative w-full max-w-4xl bg-base-100 rounded-xl shadow-lg overflow-hidden">
@@ -205,6 +223,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         className="select select-bordered w-full"
                                         value={localTask.status}
                                         onChange={(e) => handleInputChange('status', e.target.value)}
+                                        disabled={userRole === 'user'}
                                     >
                                         <option value="To Do">To Do</option>
                                         <option value="In Progress">In Progress</option>
@@ -212,51 +231,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         <option value="Done">Done</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="label">
-                                        <span className="label-text font-semibold">Start Date</span>
-                                    </label>
-                                    {userRole === 'admin' || userRole === 'owner' ? (
-                                        <input
-                                            type="datetime-local"
-                                            value={isValid(new Date(localTask.start_date)) ? format(new Date(localTask.start_date), "yyyy-MM-dd'T'HH:mm") : ''}
-                                            onChange={(e) => handleInputChange('start_date', e.target.value)}
-                                            className="input input-bordered w-full"
-                                        />
-                                    ) : (
-                                        <p className="text-sm">{new Date(localTask.start_date).toLocaleString()}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">
-                                        <span className="label-text font-semibold">Due Date</span>
-                                    </label>
-                                    {userRole === 'admin' || userRole === 'owner' ? (
-                                        <input
-                                            type="datetime-local"
-                                            value={isValid(new Date(localTask.due_date)) ? format(new Date(localTask.due_date), "yyyy-MM-dd'T'HH:mm") : ''}
-                                            onChange={(e) => handleInputChange('due_date', e.target.value)}
-                                            className="input input-bordered w-full"
-                                        />
-                                    ) : (
-                                        <p className="text-sm">{new Date(localTask.due_date).toLocaleString()}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">
-                                        <span className="label-text font-semibold">Deadline</span>
-                                    </label>
-                                    {userRole === 'admin' || userRole === 'owner' ? (
-                                        <input
-                                            type="datetime-local"
-                                            value={isValid(new Date(localTask.deadline)) ? format(new Date(localTask.deadline), "yyyy-MM-dd'T'HH:mm") : ''}
-                                            onChange={(e) => handleInputChange('deadline', e.target.value)}
-                                            className="input input-bordered w-full"
-                                        />
-                                    ) : (
-                                        <p className="text-sm">{new Date(localTask.deadline).toLocaleString()}</p>
-                                    )}
-                                </div>
+                                {renderDateInput('start_date', 'Start Date')}
+                                {renderDateInput('due_date', 'Due Date')}
+                                {renderDateInput('deadline', 'Deadline')}
                             </div>
                             <div>
                                 <label className="label">
@@ -287,6 +264,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                         }
                                     }}
                                     value=""
+                                    disabled={userRole === 'user'}
                                 >
                                     <option value="" disabled>Add a tag</option>
                                     {tags.filter(tag => !localTask.tags.includes(tag.id)).map(tag => (
@@ -302,6 +280,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     className="select select-bordered w-full"
                                     value={localTask.assignee || ''}
                                     onChange={(e) => handleInputChange('assignee', e.target.value || null)}
+                                    disabled={userRole === 'user'}
                                 >
                                     <option value="">Unassigned</option>
                                     {users.map(user => (
@@ -322,6 +301,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                             checked={item.isCompleted}
                                             onChange={() => toggleChecklistItem(item.id)}
                                             className="checkbox"
+                                            disabled={userRole === 'user'}
                                         />
                                         <span className={item.isCompleted ? 'line-through' : ''}>{item.text}</span>
                                     </li>
@@ -362,6 +342,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ taskId, onClose }) => {
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     placeholder="Add a comment"
+                                    disabled={userRole === 'user'}
                                 />
                                 {(userRole === 'admin' || userRole === 'owner') && (
                                     <button className="btn btn-primary btn-square" onClick={addComment}>

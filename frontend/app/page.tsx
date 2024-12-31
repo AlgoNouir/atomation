@@ -15,6 +15,12 @@ import CreateProjectModal from '@/components/CreateProjectModal';
 import CreateMilestoneModal from '@/components/CreateMilestoneModal';
 import ProjectPermissionsModal from '@/components/ProjectPermissionsModal';
 import AddTaskModal from '@/components/AddTaskModal';
+import { useRouter } from 'next/navigation';
+import { fetchProjects } from '@/store/slices/project';
+import { fetchLogs } from '@/store/slices/logSlice';
+import { fetchTags } from '@/store/slices/tagSlice';
+import { fetchProjectUsers } from '@/store/slices/userSlice';
+import { useAppDispatch } from '@/store/hooks';
 
 // New Modals component
 const Modals = ({
@@ -74,7 +80,27 @@ export default function KanbanPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
   const auth = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const router = useRouter()
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const main = async () => {
+
+      if (!auth.token)
+        router.push("/login")
+      else
+        // Fetch initial data
+        await Promise.all([
+          dispatch(fetchProjects()),
+          dispatch(fetchLogs('all')),
+          dispatch(fetchTags()),
+          dispatch(fetchProjectUsers())
+        ]);
+
+    }
+
+    main()
+  }, [auth])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

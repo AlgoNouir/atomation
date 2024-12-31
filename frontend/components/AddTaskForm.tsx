@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { createTask } from '@/store/slices/project';
 import { fetchTags } from '@/store/slices/tagSlice';
@@ -16,18 +16,18 @@ interface ChecklistItem {
 }
 
 const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
-  const dispatch = useAppDispatch();
-  const users = useAppSelector((state) => state.users.users);
-  const tags = useAppSelector((state) => state.tags.tags);
-  const tagStatus = useAppSelector((state) => state.tags.status);
+  const dispatch = useDispatch<AppDispatch>();
+  const users = useSelector((state: RootState) => state.users.users);
+  const tags = useSelector((state: RootState) => state.tags.tags);
+  const tagStatus = useSelector((state: RootState) => state.tags.status);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('To Do');
   const [assignee, setAssignee] = useState('');
-  const [start_date, setStart_date] = useState('');
-  const [due_date, setDue_date] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [start_date, setStart_date] = useState<string | null>(null);
+  const [due_date, setDue_date] = useState<string | null>(null);
+  const [deadline, setDeadline] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
@@ -45,7 +45,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
     setIsSubmitting(true);
     setError(null);
 
-    if (title.trim() && start_date && due_date && deadline) {
+    if (title.trim()) {
       try {
         await dispatch(createTask({
           milestoneId,
@@ -71,7 +71,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
         setIsSubmitting(false);
       }
     } else {
-      setError("Please fill in all required fields");
+      setError("Please fill in the title field");
       setIsSubmitting(false);
     }
   };
@@ -146,41 +146,38 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ milestoneId, onClose }) => {
       </div>
       <div className="form-control">
         <label htmlFor="start_date" className="label">
-          <span className="label-text">Start Date and Time</span>
+          <span className="label-text">Start Date and Time (optional)</span>
         </label>
         <input
           type="datetime-local"
           id="start_date"
-          value={start_date}
-          onChange={(e) => setStart_date(e.target.value)}
+          value={start_date || ''}
+          onChange={(e) => setStart_date(e.target.value || null)}
           className="input input-bordered w-full"
-          required
         />
       </div>
       <div className="form-control">
         <label htmlFor="due_date" className="label">
-          <span className="label-text">Due Date and Time</span>
+          <span className="label-text">Due Date and Time (optional)</span>
         </label>
         <input
           type="datetime-local"
           id="due_date"
-          value={due_date}
-          onChange={(e) => setDue_date(e.target.value)}
+          value={due_date || ''}
+          onChange={(e) => setDue_date(e.target.value || null)}
           className="input input-bordered w-full"
-          required
         />
       </div>
       <div className="form-control">
         <label htmlFor="deadline" className="label">
-          <span className="label-text">Deadline Date and Time</span>
+          <span className="label-text">Deadline Date and Time (optional)</span>
         </label>
         <input
           type="datetime-local"
           id="deadline"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
+          value={deadline || ''}
+          onChange={(e) => setDeadline(e.target.value || null)}
           className="input input-bordered w-full"
-          required
         />
       </div>
       <div className="form-control">

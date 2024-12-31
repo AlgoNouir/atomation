@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { FolderIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2, PlusIcon, CircleDot, Circle, CheckCircle } from 'lucide-react';
+import { FolderIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2, PlusIcon, CircleDot, Circle, CheckCircle, User } from 'lucide-react';
 import { RootState, AppDispatch } from '../store/store';
 import { setSelectedMilestone, fetchProjects } from '@/store/slices/project';
 import { setTasks } from '@/store/slices/kanban';
@@ -17,6 +17,14 @@ interface ProjectListProps {
   onOpenCreateMilestoneModal: (projectId: string) => void;
   onOpenProjectPermissionsModal: (projectId: string) => void;
   onOpenAddTaskModal: (projectId: string, milestoneId: string) => void;
+}
+
+interface Task {
+  id: string;
+  name: string;
+  status: 'To Do' | 'In Progress' | 'Done';
+  assignee: string;
+  // ... other properties
 }
 
 const ProjectList: React.FC<ProjectListProps> = ({
@@ -78,11 +86,16 @@ const ProjectList: React.FC<ProjectListProps> = ({
     onOpenAddTaskModal(projectId, milestoneId);
   };
 
-  const calculateTaskStats = (tasks: Task[]) => {
+  const calculateAccountTaskCount = (tasks: Task[], userId: string) => {
+    return tasks.filter(task => task.assignee === userId).length;
+  };
+
+  const calculateTaskStats = (tasks: Task[], userId: string) => {
     const stats = {
       'To Do': 0,
       'In Progress': 0,
-      'Done': 0
+      'Done': 0,
+      'Account': calculateAccountTaskCount(tasks, userId)
     };
     tasks.forEach(task => {
       if (stats.hasOwnProperty(task.status)) {
@@ -144,11 +157,12 @@ const ProjectList: React.FC<ProjectListProps> = ({
                           )}
                         </div>
                         <div className="flex items-center space-x-2 mt-2 text-xs">
-                          {Object.entries(calculateTaskStats(milestone.tasks)).map(([status, count]) => (
+                          {Object.entries(calculateTaskStats(milestone.tasks, currentUserId)).map(([status, count]) => (
                             <div key={status} className="flex items-center space-x-1">
                               {status === 'To Do' && <Circle size={12} />}
                               {status === 'In Progress' && <CircleDot size={12} />}
                               {status === 'Done' && <CheckCircle size={12} />}
+                              {status === 'Account' && <User size={12} />}
                               <span>{count}</span>
                             </div>
                           ))}

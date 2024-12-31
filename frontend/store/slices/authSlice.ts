@@ -111,14 +111,6 @@ export const login = (username: string, password: string): AppThunk => async (di
         localStorage.setItem('token', token);
         dispatch(loginSuccess({ token, user: userData }));
 
-        // Fetch initial data
-        await Promise.all([
-            dispatch(fetchProjects()),
-            dispatch(fetchLogs('all')),
-            dispatch(fetchTags()),
-            dispatch(fetchProjectUsers())
-        ]);
-
         dispatch(activityFetchComplete());
         dispatch(setRedirectToPanel());
     } catch (error) {

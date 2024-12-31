@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
-import { axiosReq } from '@/utils/axios';
 
 interface ChecklistItem {
     id: string;
@@ -27,9 +26,9 @@ interface Task {
     title: string;
     description: string;
     tags: number[];
-    start_date: string;
-    due_date: string;
-    deadline: string;
+    start_date: string | null;
+    due_date: string | null;
+    deadline: string | null;
     checklist: ChecklistItem[];
     assignee: string | null;
     attachments: string[];
@@ -45,8 +44,7 @@ interface Milestone {
 }
 
 interface ProjectPermission {
-    id: number
-    user: number;
+    userId: string;
     role: 'viewer' | 'editor' | 'admin';
 }
 
@@ -73,13 +71,13 @@ const initialState: ProjectState = {
 
 export const fetchProjects = createAsyncThunk(
     'projects/fetchProjects',
-    async (_) => {
-        const response = await axiosReq.get("/api/projects/",
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
-            });
+    async (_, { getState }) => {
+        const { auth } = getState() as RootState;
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/`, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`,
+            },
+        });
         return response.data;
     }
 );
@@ -88,13 +86,13 @@ export const createProject = createAsyncThunk(
     'projects/createProject',
     async (projectName: string, { getState }) => {
         const { auth } = getState() as RootState;
-        const response = await axiosReq.post(
-            "/api/projects/",
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/projects/`,
             { name: projectName },
             {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
+                    Authorization: `Bearer ${auth.token}`,
+                },
             }
         );
         return response.data;
@@ -104,13 +102,14 @@ export const createProject = createAsyncThunk(
 export const createMilestone = createAsyncThunk(
     'projects/createMilestone',
     async ({ projectId, name }: { projectId: string; name: string }, { getState }) => {
-        const response = await axiosReq.post(
-            `/api/projects/${projectId}/milestones/`,
+        const { auth } = getState() as RootState;
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/milestones/`,
             { name },
             {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
+                    Authorization: `Bearer ${auth.token}`,
+                },
             }
         );
         return response.data;
@@ -125,20 +124,20 @@ export const createTask = createAsyncThunk(
         // Format dates to ISO string
         const formattedTask = {
             ...task,
-            start_date: new Date(task.start_date).toISOString(),
-            due_date: new Date(task.due_date).toISOString(),
-            deadline: new Date(task.deadline).toISOString(),
+            start_date: task.start_date ? new Date(task.start_date).toISOString() : null,
+            due_date: task.due_date ? new Date(task.due_date).toISOString() : null,
+            deadline: task.deadline ? new Date(task.deadline).toISOString() : null,
             tags: task.tags.map(tag => parseInt(tag, 10)), // Ensure tags are numbers
             checklist: task.checklist, // Include the checklist
         };
 
-        const response = await axiosReq.post(
-            `/api/milestones/${milestoneId}/tasks/`,
+        const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/milestones/${milestoneId}/tasks/`,
             formattedTask,
             {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
+                    Authorization: `Bearer ${auth.token}`,
+                },
             }
         );
         return { milestoneId, task: { ...response.data, id: String(response.data.id) } };
@@ -148,8 +147,9 @@ export const createTask = createAsyncThunk(
 export const updateTaskThunk = createAsyncThunk(
     'projects/updateTask',
     async ({ milestoneId, taskId, updates }: { milestoneId: string; taskId: string; updates: Partial<Task> }, { getState }) => {
-        const response = await axiosReq.put(
-            `/api/tasks/${taskId}/`,
+        const { auth } = getState() as RootState;
+        const response = await axios.put(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/`,
             {
                 ...updates,
                 start_date: updates.start_date,
@@ -157,8 +157,8 @@ export const updateTaskThunk = createAsyncThunk(
             },
             {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }
+                    Authorization: `Bearer ${auth.token}`,
+                },
             }
         );
         return { milestoneId, taskId, updatedTask: response.data };
@@ -174,7 +174,7 @@ const projectSlice = createSlice({
                 id: Date.now().toString(),
                 name: action.payload.name,
                 milestones: [],
-                permissions: [{ user: action.payload.ownerId, role: 'admin' }],
+                permissions: [{ userId: action.payload.ownerId, role: 'admin' }],
             };
             state.projects.push(newProject);
         },
@@ -294,7 +294,7 @@ export const selectPermittedTasks = (state: RootState) => {
     }
 
     return allProjects
-        .filter(p => (permittedProjects || []).includes(p.id))
+        .filter(p => permittedProjects.includes(p.id))
         .filter(hasMilestones)
         .flatMap(p => p.milestones?.flatMap(m => m.tasks || []) || [])
         .filter(task => task.assignee === id);

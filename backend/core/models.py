@@ -43,9 +43,9 @@ class Task(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='To Do')
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    start_date = models.DateTimeField()
-    due_date = models.DateTimeField()
-    deadline = models.DateTimeField()
+    start_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
+    deadline = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} ({self.milestone.project.name} - {self.milestone.name})"
