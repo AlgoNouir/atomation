@@ -5,14 +5,27 @@ import { RootState, AppDispatch } from '../store/store';
 import { setSelectedMilestone, fetchProjects } from '@/store/slices/project';
 import { setTasks } from '@/store/slices/kanban';
 import LogViewer from './LogViewer';
-// import LogModal from './LogModal'; //Removed as per update
 import CreateProjectModal from './CreateProjectModal';
 import CreateMilestoneModal from './CreateMilestoneModal';
 import AddTaskModal from './AddTaskModal';
 import { UserRole } from '@/store/slices/accountSlice';
 import ProjectPermissionsModal from './ProjectPermissionsModal';
 
-const ProjectList: React.FC<{ onShowLogModal: () => void }> = ({ onShowLogModal }) => { //Update 1
+interface ProjectListProps {
+  onShowLogModal: () => void;
+  onOpenCreateProjectModal: () => void;
+  onOpenCreateMilestoneModal: (projectId: string) => void;
+  onOpenProjectPermissionsModal: (projectId: string) => void;
+  onOpenAddTaskModal: (projectId: string, milestoneId: string) => void;
+}
+
+const ProjectList: React.FC<ProjectListProps> = ({
+  onShowLogModal,
+  onOpenCreateProjectModal,
+  onOpenCreateMilestoneModal,
+  onOpenProjectPermissionsModal,
+  onOpenAddTaskModal
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const projects = useSelector((state: RootState) => state.projects.projects);
   const selectedMilestone = useSelector((state: RootState) => state.projects.selectedMilestone);
@@ -54,19 +67,15 @@ const ProjectList: React.FC<{ onShowLogModal: () => void }> = ({ onShowLogModal 
   };
 
   const handleCreateMilestone = (projectId: string) => {
-    setSelectedProjectId(projectId);
-    setIsCreateMilestoneModalOpen(true);
+    onOpenCreateMilestoneModal(projectId);
   };
 
   const handleManagePermissions = (projectId: string) => {
-    setSelectedProjectForPermissions(projectId);
-    setIsPermissionsModalOpen(true);
+    onOpenProjectPermissionsModal(projectId);
   };
 
   const handleAddTask = (projectId: string, milestoneId: string) => {
-    setSelectedMilestoneForTask(milestoneId);
-    setSelectedProjectForTask(projectId);
-    setIsAddTaskModalOpen(true);
+    onOpenAddTaskModal(projectId, milestoneId);
   };
 
   const calculateTaskStats = (tasks: Task[]) => {
@@ -171,37 +180,16 @@ const ProjectList: React.FC<{ onShowLogModal: () => void }> = ({ onShowLogModal 
         </div>
       </div>
       <div className="mt-auto p-4 border-t border-base-300">
-        <LogViewer onShowMore={onShowLogModal} /> {/*Update 2*/}
+        <LogViewer onShowMore={onShowLogModal} />
       </div>
-      {/* <LogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />  Update 3 */}
       {userRole === 'owner' && (
         <button
           className="mt-4 btn btn-primary w-full"
-          onClick={() => setIsCreateProjectModalOpen(true)}
+          onClick={onOpenCreateProjectModal}
         >
           Create New Project
         </button>
       )}
-      <CreateProjectModal
-        isOpen={isCreateProjectModalOpen}
-        onClose={() => setIsCreateProjectModalOpen(false)}
-      />
-      <CreateMilestoneModal
-        isOpen={isCreateMilestoneModalOpen}
-        onClose={() => setIsCreateMilestoneModalOpen(false)}
-        projectId={selectedProjectId || ''}
-      />
-      <ProjectPermissionsModal
-        isOpen={isPermissionsModalOpen}
-        onClose={() => setIsPermissionsModalOpen(false)}
-        projectId={selectedProjectForPermissions || ''}
-      />
-      <AddTaskModal
-        isOpen={isAddTaskModalOpen}
-        onClose={() => setIsAddTaskModalOpen(false)}
-        milestoneId={selectedMilestoneForTask || ''}
-        projectId={selectedProjectForTask || ''}
-      />
     </div>
   );
 };

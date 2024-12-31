@@ -8,9 +8,13 @@ import SettingsModal from '@/components/SettingsModal';
 import TeamModal from '@/components/TeamModal';
 import LogModal from '@/components/LogModal';
 import { Sun, Moon, Settings, LogOut, Users, Menu } from 'lucide-react';
-import { logoutUser } from '@/store/slices/authSlice';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import LoginPage from '@/components/LoginPage';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store/store';
+import { logout, logoutUser } from '@/store/slices/authSlice';
+import CreateProjectModal from '@/components/CreateProjectModal';
+import CreateMilestoneModal from '@/components/CreateMilestoneModal';
+import ProjectPermissionsModal from '@/components/ProjectPermissionsModal';
+import AddTaskModal from '@/components/AddTaskModal';
 
 // New Modals component
 const Modals = ({
@@ -19,13 +23,40 @@ const Modals = ({
   isTeamModalOpen,
   setIsTeamModalOpen,
   isLogModalOpen,
-  setIsLogModalOpen
-}: { [key in string]: any }) => {
+  setIsLogModalOpen,
+  isCreateProjectModalOpen,
+  setIsCreateProjectModalOpen,
+  isCreateMilestoneModalOpen,
+  setIsCreateMilestoneModalOpen,
+  isProjectPermissionsModalOpen,
+  setIsProjectPermissionsModalOpen,
+  isAddTaskModalOpen,
+  setIsAddTaskModalOpen,
+  selectedProjectId,
+  selectedMilestoneId,
+}) => {
   return (
     <>
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <TeamModal isOpen={isTeamModalOpen} onClose={() => setIsTeamModalOpen(false)} />
       <LogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />
+      <CreateProjectModal isOpen={isCreateProjectModalOpen} onClose={() => setIsCreateProjectModalOpen(false)} />
+      <CreateMilestoneModal
+        isOpen={isCreateMilestoneModalOpen}
+        onClose={() => setIsCreateMilestoneModalOpen(false)}
+        projectId={selectedProjectId || ''}
+      />
+      <ProjectPermissionsModal
+        isOpen={isProjectPermissionsModalOpen}
+        onClose={() => setIsProjectPermissionsModalOpen(false)}
+        projectId={selectedProjectId || ''}
+      />
+      <AddTaskModal
+        isOpen={isAddTaskModalOpen}
+        onClose={() => setIsAddTaskModalOpen(false)}
+        milestoneId={selectedMilestoneId || ''}
+        projectId={selectedProjectId || ''}
+      />
     </>
   );
 };
@@ -36,10 +67,14 @@ export default function KanbanPage() {
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const auth = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
-
-
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+  const [isCreateMilestoneModalOpen, setIsCreateMilestoneModalOpen] = useState(false);
+  const [isProjectPermissionsModalOpen, setIsProjectPermissionsModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
+  const auth = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -52,10 +87,6 @@ export default function KanbanPage() {
   const handleLogout = () => {
     dispatch(logoutUser());
   };
-
-  if (!auth.token || !auth.isAuthenticated) {
-    return <LoginPage />
-  }
 
   return (
     <div className="drawer lg:drawer-open">
@@ -100,7 +131,7 @@ export default function KanbanPage() {
                     <div className="ml-4 flex items-center">
                       <span className="text-sm font-medium text-base-content mr-2">{auth.name}</span>
                       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content">
-                        {(auth?.name || "U").charAt(0)}
+                        {auth.name.charAt(0)}
                       </div>
                     </div>
                     <button
@@ -124,7 +155,23 @@ export default function KanbanPage() {
       <div className="drawer-side">
         <label htmlFor="project-drawer" className="drawer-overlay"></label>
         <div className="w-80 bg-base-200 h-full">
-          <ProjectList onShowLogModal={() => setIsLogModalOpen(true)} />
+          <ProjectList
+            onShowLogModal={() => setIsLogModalOpen(true)}
+            onOpenCreateProjectModal={() => setIsCreateProjectModalOpen(true)}
+            onOpenCreateMilestoneModal={(projectId) => {
+              setSelectedProjectId(projectId);
+              setIsCreateMilestoneModalOpen(true);
+            }}
+            onOpenProjectPermissionsModal={(projectId) => {
+              setSelectedProjectId(projectId);
+              setIsProjectPermissionsModalOpen(true);
+            }}
+            onOpenAddTaskModal={(projectId, milestoneId) => {
+              setSelectedProjectId(projectId);
+              setSelectedMilestoneId(milestoneId);
+              setIsAddTaskModalOpen(true);
+            }}
+          />
         </div>
       </div>
       <Modals
@@ -134,6 +181,16 @@ export default function KanbanPage() {
         setIsTeamModalOpen={setIsTeamModalOpen}
         isLogModalOpen={isLogModalOpen}
         setIsLogModalOpen={setIsLogModalOpen}
+        isCreateProjectModalOpen={isCreateProjectModalOpen}
+        setIsCreateProjectModalOpen={setIsCreateProjectModalOpen}
+        isCreateMilestoneModalOpen={isCreateMilestoneModalOpen}
+        setIsCreateMilestoneModalOpen={setIsCreateMilestoneModalOpen}
+        isProjectPermissionsModalOpen={isProjectPermissionsModalOpen}
+        setIsProjectPermissionsModalOpen={setIsProjectPermissionsModalOpen}
+        isAddTaskModalOpen={isAddTaskModalOpen}
+        setIsAddTaskModalOpen={setIsAddTaskModalOpen}
+        selectedProjectId={selectedProjectId}
+        selectedMilestoneId={selectedMilestoneId}
       />
     </div>
   );

@@ -35,7 +35,7 @@ const CreateMilestoneModal: React.FC<CreateMilestoneModalProps> = ({ isOpen, onC
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[999] flex items-center justify-center p-4 w-screen">
       <div className="bg-base-100 rounded-lg w-full max-w-md">
         <div className="flex justify-between items-center p-4 border-b border-base-300">
           <h2 className="text-2xl font-bold">Create New Milestone</h2>
